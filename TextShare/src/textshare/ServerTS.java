@@ -3,6 +3,7 @@ package textshare;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Scanner;
 
 /** TSServer accetta nuove connessioni e lascia la gestione a thread creati appositamente
  * per il client appena connesso
@@ -23,7 +24,9 @@ public class ServerTS {
             ServerSocket listener = new ServerSocket(port);
 
             //TextManager textManager = new TextManager(); //gestore dei file di testo con tutti i metodi
-                        
+            
+            Scanner userInput = new Scanner(System.in); //Lettura dell'input da terminale
+            
             //Ciclo di vita del thread principale del server
             while (true) {
                 System.out.println("In ascolto...");
@@ -35,7 +38,12 @@ public class ServerTS {
                 clientHandlerThread.start();
                 //Si rimette in ascolto di altre connessioni
                 
-                //TODO: comandi info e quit
+                if (userInput.nextLine().equalsIgnoreCase("info")) {
+                	//TODO:info
+                }
+                if (userInput.nextLine().equalsIgnoreCase("quit")) {
+                	break;
+                }
             }
             
             //TODO: interruzione del server e conseguente chiusura del ServerSocket 

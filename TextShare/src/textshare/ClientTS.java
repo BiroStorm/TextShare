@@ -53,7 +53,7 @@ public class ClientTS {
             System.out.println("Disconessione avvenuta con successo");
 
         } catch (IOException e) {
-            System.err.println("Error during an I/O operation:");
+            System.err.println("Errore durante operazione I/O");
             e.printStackTrace();
         }
         
