@@ -38,17 +38,12 @@ public class ServerTS {
                 clientHandlerThread.start();
                 //Si rimette in ascolto di altre connessioni
                 
-                if (userInput.nextLine().equalsIgnoreCase("info")) {
-                	//TODO:info
-                }
-                if (userInput.nextLine().equalsIgnoreCase("quit")) {
-                	break;
-                }
+                //TODO: info e quit, nuovo thread
             }
             
             //interruzione del server e conseguente chiusura del ServerSocket 
-            listener.close();
-            userInput.close();
+            //listener.close();
+            //userInput.close();
 
         } catch (IOException e) {
             System.err.println("Error during I/O operation:");
