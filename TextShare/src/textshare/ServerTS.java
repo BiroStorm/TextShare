@@ -46,8 +46,9 @@ public class ServerTS {
                 }
             }
             
-            //TODO: interruzione del server e conseguente chiusura del ServerSocket 
-            //listener.close();
+            //interruzione del server e conseguente chiusura del ServerSocket 
+            listener.close();
+            userInput.close();
 
         } catch (IOException e) {
             System.err.println("Error during I/O operation:");
