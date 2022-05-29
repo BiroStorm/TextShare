@@ -9,11 +9,11 @@ import java.util.Scanner;
 public class ClientHandlerTS implements Runnable {
 
     private Socket s;
-    //private TextManager textManager;
+    private TextManager textManager;
 
-    public ClientHandlerTS(Socket s/*, TextManager textManager*/) {
+    public ClientHandlerTS(Socket s, TextManager textManager) {
         this.s = s;
-        //this.textManager = textManager;
+        this.textManager = textManager;
     } 
 
     @Override
@@ -24,12 +24,19 @@ public class ClientHandlerTS implements Runnable {
 
             //Ciclo di vita
             while (true) {
-                String request = fromClient.nextLine(); //Lettura della richiesta del client
+                String command = fromClient.nextLine(); //Lettura della richiesta del client
 
                 //TODO: comandi client
+                if (command.equalsIgnoreCase("quit")) {
+                	break;
+                } else {
+                	System.out.println("Comando sconosciuto");
+                }
             }
 
-            //TODO: chiudere la connessione
+            //chiude la connessione
+            s.close();
+            System.out.println("Client disconnesso");
 
         } catch (IOException e) {
             System.err.println("Error during I/O operation:");

@@ -23,7 +23,7 @@ public class ServerTS {
         try {
             ServerSocket listener = new ServerSocket(port);
 
-            //TextManager textManager = new TextManager(); //gestore dei file di testo con tutti i metodi
+            TextManager textManager = new TextManager(); //gestore dei file di testo con tutti i metodi
             
             Scanner userInput = new Scanner(System.in); //Lettura dell'input da terminale
             
@@ -34,7 +34,7 @@ public class ServerTS {
                 System.out.println("Connesso");
 
                 //Lasica la gestione a un thread dedicato
-                Thread clientHandlerThread = new Thread(new ClientHandlerTS(s/*, TextManager*/));
+                Thread clientHandlerThread = new Thread(new ClientHandlerTS(s, textManager));
                 clientHandlerThread.start();
                 //Si rimette in ascolto di altre connessioni
                 
