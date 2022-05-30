@@ -13,6 +13,7 @@ public class ClientTS {
             System.err.println("Errore, avviare nel seguente modo: java TSClient <host> <port>");
             return;
         }
+        
         //estraiamo i due argomenti da linea di comando
         String host = args[0];
         int port = Integer.parseInt(args[1]);
@@ -20,7 +21,6 @@ public class ClientTS {
         try {
             //Ci connettiamo all'indirizzo e alla porta forniti
             Socket s = new Socket(host, port);
-            System.out.println("Connessione avvenuta con successo\n");
             System.out.println("Benvenuto/a in TextShare!\n"
             		+ "Puoi eseguire uno dei seguenti comandi:\n"
             		+ "- \"list\": ottieni una lista di tutti i file presenti sul server\n"
@@ -30,7 +30,10 @@ public class ClientTS {
             		+ "- \"edit\": seguito da <nome>.txt, apre il file in modalità scrittura\n"
             		+ "   - \":backspace\": se sei in modalità scrittura, elimina l'ultima riga del file\n"
             		+ "   - \":close\": se sei in modalità scrittura, chiude la sessione\n"
-            		+ "   - ogni comando che non inizia con \":\" viene interpretato come una riga di testo che viene aggiunta in coda al file");
+            		+ "   - ogni comando che non inizia con \":\" viene interpretato come una riga di testo che viene aggiunta in coda al file\n"
+            		+ "- \"rename\": seguito da <nome_file_da _rinominare>.txt e da <nuovo_nome>.txt, rinomina il file\n"
+            		+ "-\"delete\": seguito da <nome_file_da_eliminare>.txt, elimita tale file\n"
+            		+ "-\"quit\": arresta il client");
 
             Scanner fromServer = new Scanner(s.getInputStream()); //Wrapper per ricevere dal server
             PrintWriter toServer = new PrintWriter(s.getOutputStream(), true); //Wrapper per inviare al server
