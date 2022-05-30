@@ -13,11 +13,12 @@ public class ClientTS {
             System.err.println("Errore, avviare nel seguente modo: java TSClient <host> <port>");
             return;
         }
+        //estraiamo i due argomenti da linea di comando
         String host = args[0];
         int port = Integer.parseInt(args[1]);
 
         try {
-            //Connessione a host:port
+            //Ci connettiamo all'indirizzo e alla porta forniti
             Socket s = new Socket(host, port);
             System.out.println("Connessione avvenuta con successo\n");
             System.out.println("Benvenuto/a in TextShare!\n"
@@ -43,18 +44,19 @@ public class ClientTS {
                 if (request.equals("quit")) {
                     //Se l'utente scrive quit, interrompe il ciclo
                     break;
+                } else {
+                	String response = fromServer.nextLine(); //Lettura della risposta del server
+                	System.out.println(response); //stampa della risposta
                 }
-                String response = fromServer.nextLine(); //Lettura della risposta del server
-                System.out.println(response); //stampa della risposta
             }
 
+            //Al termine del ciclo di vita, viene chiusa la connessione e lo scanner
             s.close();
             userInput.close();
             System.out.println("Disconessione avvenuta con successo");
 
         } catch (IOException e) {
-            System.err.println("Errore durante operazione I/O");
-            e.printStackTrace();
+            System.err.println("Errore I/O");
         }
         
     }

@@ -1,12 +1,15 @@
 package textshare;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 import java.util.Scanner;
 
 /** TSServer accetta nuove connessioni e lascia la gestione a thread creati appositamente
- * per il client appena connesso
+ * per il client appena connesso; per gestire i comandi di info e quit, crea un apposito thread
  */
 public class ServerTS {
     
@@ -18,10 +21,15 @@ public class ServerTS {
         String path = args[0];
         int port = Integer.parseInt(args[1]);
 
-        //TODO: lettura path e sollevare eccezione se ci sono problemi
+        //check del path
+        File f = new File(path);
+        if (!(f.exists()) || !(f.isDirectory())) {
+        	System.err.println("Il path inserito non esiste");
+        	return;
+        }
         
         try {
-            ServerSocket listener = new ServerSocket(port);
+            ServerSocket listener = new ServerSocket(port); //si mette in ascolto sulla porta creando un'istanza di ServerSocekt
 
             TextManager textManager = new TextManager(); //gestore dei file di testo con tutti i metodi
             
