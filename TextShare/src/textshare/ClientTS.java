@@ -3,7 +3,17 @@ package textshare;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
+
+/*
+ * ClientTS implementa la logica del client. Prende come argomenti host e porta, si connette creando un socket lato client.
+ * Invia i comandi al server (vedi ClientHandlerTS), riceve la risposta e la stampa su terminale.
+ * Con il comando quit chiude il suo socket e, dato che invia anche questo comando al server (ClientHandlerTS),
+ * quest'ultimo saprà di dover anch'esso chiudere il socket lato server.
+ * NB: quando il server viene chiuso, tutti i client rimasti connessi vengono disconnessi ma il processo client non viene terminato;
+ * quando verrà inserito un comando dall'utente client, allora il comando non verrà accettato perché il server e' chiuso e l'applicazione verra' terminata
+ */
 
 public class ClientTS {
     public static void main (String args[]) {
@@ -38,13 +48,13 @@ public class ClientTS {
             Scanner fromServer = new Scanner(s.getInputStream()); //Wrapper per ricevere dal server
             PrintWriter toServer = new PrintWriter(s.getOutputStream(), true); //Wrapper per inviare al server
 
-            Scanner userInput = new Scanner(System.in); //Lettura da terminale
+            Scanner userInput = new Scanner(System.in); //Scanner per leggere i comandi da terminale
 
             //Ciclo di vita del client
             while (true) {
                 String request = userInput.nextLine(); //Lettura della richiesta dell'utente
                 toServer.println(request); //inoltro della richista al server
-                if (request.equals("quit")) {
+                if (request.equalsIgnoreCase("quit")) {
                     //Se l'utente scrive quit, interrompe il ciclo
                     break;
                 } else {
@@ -54,12 +64,20 @@ public class ClientTS {
             }
 
             //Al termine del ciclo di vita, viene chiusa la connessione e lo scanner
+            System.out.println("Sto chiudendo il socket lato client");
             s.close();
             userInput.close();
             System.out.println("Disconessione avvenuta con successo");
 
         } catch (IOException e) {
-            System.err.println("Errore I/O");
+            System.err.println("Errore durante operazione I/O");
+        } catch (NoSuchElementException e) {
+        	/*
+        	 * Questa eccezione verra' sollevata nel momento in cui La lettura della richiesta dell'utente
+        	 * non sarà possibile per via della chiusura del socket da parte dell'altro thread (vedi ServerHandler)
+        	 */
+        	System.out.println("Comando non accettato, ii server e' stato chiuso.\n\nChiusura client in corso...\nClient chiuso");//Viene sollevata dalla riga 34
+        	return;
         }
         
     }

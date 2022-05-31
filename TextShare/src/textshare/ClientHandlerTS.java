@@ -3,44 +3,69 @@ package textshare;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-//ClientHandler gestisce la connessione con il client
+/** ClientHandler implementa la gestione della connessione con il suo client, è il "server vero e proprio".
+ * Prende il clientSocket per gestire la connessione con il client,
+ * prende il TextManager che contiene i metodi per soddisfare le richieste del client,
+ * prende la lista di Socket cosi' da rimuovere il socket che gestisce dalla socketList nel caso in cui il client richieda la disconnessione.
+ * */
 public class ClientHandlerTS implements Runnable {
 
-    private Socket s;
+    private Socket socket;
+    private ArrayList<Socket> socketList = new ArrayList<>();
     private TextManager textManager;
 
-    public ClientHandlerTS(Socket s, TextManager textManager) {
-        this.s = s;
+    public ClientHandlerTS(Socket socket, ArrayList<Socket> socketList, TextManager textManager) {
+        this.socket = socket;
+        this.socketList = socketList;
         this.textManager = textManager;
     } 
 
     @Override
     public void run() {
         try {
-            Scanner fromClient = new Scanner(s.getInputStream()); //Canale di ricezione dal client
-            PrintWriter toClient = new PrintWriter(s.getOutputStream(), true); //Canale di invio verso il client
+            Scanner fromClient = new Scanner(socket.getInputStream()); //Wrapper per ricevere dal client
+            PrintWriter toClient = new PrintWriter(socket.getOutputStream(), true); //Wrapper per inviare al client
 
             //Ciclo di vita
             while (true) {
                 String command = fromClient.nextLine(); //Lettura della richiesta del client
 
-                //TODO: comandi client
+                //TODO: comandi del client da gestire (ho gia' fatto quit per testare la chiusura del client) 
                 if (command.equalsIgnoreCase("quit")) {
+                	//Se il client chiude la connessione, fai lo stesso lato server
+                	System.out.println("Sto chiudendo il socket lato server");
                 	break;
                 } else {
-                	System.out.println("Comando sconosciuto");
+                	//In caso di comando sconosciuto, notifica il client
+                	toClient.println("Comando sconosciuto");
                 }
+            }
+            
+          //rimuove il socket dalla lista dei socket.
+            for (Socket s : socketList) {
+            	if (this.socket.equals(s)) {
+            		socketList.remove(s);
+            		break;
+            	}
             }
 
             //chiude la connessione
-            s.close();
+            this.socket.close();
             System.out.println("Client disconnesso");
 
         } catch (IOException e) {
-            System.err.println("Error during I/O operation:");
+            System.err.println("Errore durante operazione I/O");
             e.printStackTrace();
+        } catch (NoSuchElementException e) {
+        	/*
+        	 * Viene sollevata una NoSuchElementException quando il socket viene chiuso, perché fromClient.nextLine(), riga 28, non può più leggere
+        	 * Visto che il socket e' chiuso, il ClientHandler può terminare
+        	 */
+        	return;
         }
         
     }
