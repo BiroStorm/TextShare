@@ -1,4 +1,4 @@
-package textshare;
+package server;
 
 import java.io.File;
 import java.io.IOException;
@@ -30,7 +30,7 @@ public class ServerTS {
         try {
             ServerSocket listener = new ServerSocket(port); //si mette in ascolto creando un'istanza di ServerSocekt, puo' sollevare IOException
             System.out.println("Benvenuto/a in TextShare! \n\n"
-            		+ "Il Server è attivo. Puoi eseguire uno dei seguenti comandi:\n"
+            		+ "Il Server Ã¨ attivo. Puoi eseguire uno dei seguenti comandi:\n"
             		+ "- \"info\": ottieni informazioni sul numero di file gestiti, client attualmente connessi in lettura e"
             		+ "client attualmente connessi in scrittura\n"
             		+ "- \"quit\": disconnette eventuali client connessi e chiude il server");
@@ -59,8 +59,8 @@ public class ServerTS {
         	/*
         	 * In caso di chiusura del ServerSocket "listener" da parte di ServerHandler, listener.accept() e' ancora in esecuzione ma,
         	 * dato che viene chiuso inaspettatamente, solleva l'eccezione. La gestiamo semplicemente chiudendo l'app.
-        	 * NB: anche la creazione di listener (riga 22) può sollevare la stessa eccezione, anche in questo caso chiudiamo l'app
-        	 * perché senza ServerSocket non possiamo fare nulla.
+        	 * NB: anche la creazione di listener (riga 22) puÃ² sollevare la stessa eccezione, anche in questo caso chiudiamo l'app
+        	 * perchÃ¨ senza ServerSocket non possiamo fare nulla.
         	 */
             return;
         }

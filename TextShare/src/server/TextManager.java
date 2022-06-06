@@ -1,4 +1,4 @@
-package textshare;
+package server;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

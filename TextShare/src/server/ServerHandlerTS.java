@@ -1,4 +1,4 @@
-package textshare;
+package server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -37,8 +37,8 @@ public class ServerHandlerTS implements Runnable {
 						+ "- Numero di client attualmente connessi in scrittura: ");
 			} else if (command.equalsIgnoreCase("quit")) {
 				try {
-					listener.close();//il server non accetta più connessioni ma i ClientHandler continuano a funzionare.
-					System.out.println("ServerSocket chiuso, il server non accetta più connessioni");
+					listener.close();//il server non accetta piÃ¹ connessioni ma i ClientHandler continuano a funzionare.
+					System.out.println("ServerSocket chiuso, il server non accetta piÃ¹ connessioni");
 					for (Socket s : socketList) {
 						s.close();//chiudo tutti i socket lato server cosi' da interrompere tutti i ClientHandler ancora attivi
 						System.out.println("Chiudo socket lato server, disconnetto relativo client");

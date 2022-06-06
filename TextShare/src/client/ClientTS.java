@@ -1,4 +1,4 @@
-package textshare;
+package client;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -10,9 +10,9 @@ import java.util.Scanner;
  * ClientTS implementa la logica del client. Prende come argomenti host e porta, si connette creando un socket lato client.
  * Invia i comandi al server (vedi ClientHandlerTS), riceve la risposta e la stampa su terminale.
  * Con il comando quit chiude il suo socket e, dato che invia anche questo comando al server (ClientHandlerTS),
- * quest'ultimo sapr‡ di dover anch'esso chiudere il socket lato server.
+ * quest'ultimo sapr√† di dover anch'esso chiudere il socket lato server.
  * NB: quando il server viene chiuso, tutti i client rimasti connessi vengono disconnessi ma il processo client non viene terminato;
- * quando verr‡ inserito un comando dall'utente client, allora il comando non verr‡ accettato perchÈ il server e' chiuso e l'applicazione verra' terminata
+ * quando verr√† inserito un comando dall'utente client, allora il comando non verr√† accettato perch√† il server e' chiuso e l'applicazione verra' terminata
  */
 
 public class ClientTS {
@@ -35,11 +35,11 @@ public class ClientTS {
             		+ "Puoi eseguire uno dei seguenti comandi:\n"
             		+ "- \"list\": ottieni una lista di tutti i file presenti sul server\n"
             		+ "- \"create\": seguito da <nome>.txt, crea un nuovo file chiamato <nome>\n"
-            		+ "- \"read\": seguito da <nome>.txt, apre il file in modalit‡ lettura\n"
-            		+ "   - \":close\": se sei in modalit‡ lettura, chiude la sessione\n"
-            		+ "- \"edit\": seguito da <nome>.txt, apre il file in modalit‡ scrittura\n"
-            		+ "   - \":backspace\": se sei in modalit‡ scrittura, elimina l'ultima riga del file\n"
-            		+ "   - \":close\": se sei in modalit‡ scrittura, chiude la sessione\n"
+            		+ "- \"read\": seguito da <nome>.txt, apre il file in modalit√† lettura\n"
+            		+ "   - \":close\": se sei in modalit√† lettura, chiude la sessione\n"
+            		+ "- \"edit\": seguito da <nome>.txt, apre il file in modalit√† scrittura\n"
+            		+ "   - \":backspace\": se sei in modalit√† scrittura, elimina l'ultima riga del file\n"
+            		+ "   - \":close\": se sei in modalit√† scrittura, chiude la sessione\n"
             		+ "   - ogni comando che non inizia con \":\" viene interpretato come una riga di testo che viene aggiunta in coda al file\n"
             		+ "- \"rename\": seguito da <nome_file_da _rinominare>.txt e da <nuovo_nome>.txt, rinomina il file\n"
             		+ "-\"delete\": seguito da <nome_file_da_eliminare>.txt, elimita tale file\n"
@@ -74,7 +74,7 @@ public class ClientTS {
         } catch (NoSuchElementException e) {
         	/*
         	 * Questa eccezione verra' sollevata nel momento in cui La lettura della richiesta dell'utente
-        	 * non sar‡ possibile per via della chiusura del socket da parte dell'altro thread (vedi ServerHandler)
+        	 * non sar√† possibile per via della chiusura del socket da parte dell'altro thread (vedi ServerHandler)
         	 */
         	System.out.println("Comando non accettato, ii server e' stato chiuso.\n\nChiusura client in corso...\nClient chiuso");//Viene sollevata dalla riga 34
         	return;
