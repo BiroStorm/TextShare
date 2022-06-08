@@ -70,7 +70,8 @@ public class ClientTS {
             System.out.println("Disconessione avvenuta con successo");
 
         } catch (IOException e) {
-            System.err.println("Errore durante operazione I/O");
+            System.err.println("Errore durante operazione I/O: connessione al server non riuscita. Controllare indirizzo e porta");
+            e.printStackTrace();
         } catch (NoSuchElementException e) {
         	/*
         	 * Questa eccezione verra' sollevata nel momento in cui La lettura della richiesta dell'utente
