@@ -3,10 +3,10 @@ package server;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import error.IncorrectFileException;
@@ -32,6 +32,7 @@ public class FileHandler {
     private BufferedWriter bw;
 
     public FileHandler(String filePath) throws IncorrectFileException {
+        // TODO: Il controllo dell'esistenza del File deve essere spostato su TextManager.
         File f = new File(filePath + ".txt");
         if (!f.exists() || f.isDirectory()) {
             // Se è una directory o il file non esiste lanciamo l'eccezione.
@@ -49,7 +50,7 @@ public class FileHandler {
      * @throws IOException
      * @see {@link #CloseReadSession()}
      */
-    public void OpenReadSession() throws IOException {
+    public void OpenReadSession() throws IOException, FileNotFoundException {
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
         // Sessione di Lettura:
@@ -85,7 +86,7 @@ public class FileHandler {
      * @throws IOException
      * @see {@link #CloseWriteSession()}
      */
-    public void OpenWriteSession() throws IOException {
+    public void OpenWriteSession() throws IOException, FileNotFoundException {
         // Prendiamo il Lock in scrittura.
         this.lock.writeLock().lock();
         this.bw = new BufferedWriter(new FileWriter(file));
