@@ -75,8 +75,8 @@ public class ClientHandlerTS implements Runnable {
         } catch (NoSuchElementException e) {
             /*
              * Viene sollevata una NoSuchElementException quando il socket viene chiuso,
-             * perch' fromClient.nextLine(), riga 28, non pu' pi' leggere
-             * Visto che il socket e' chiuso, il ClientHandler pu' terminare
+             * perche' fromClient.nextLine(), riga 28, non puo' piu' leggere
+             * Visto che il socket e' chiuso, il ClientHandler puo' terminare
              */
             return;
         }
