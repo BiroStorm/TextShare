@@ -20,12 +20,12 @@ public class ClientHandlerTS implements Runnable {
 
     private Socket socket;
     private ArrayList<Socket> socketList = new ArrayList<>();
-    private TextManager textManager;
+    private DirectoryManager dirManager;
 
-    public ClientHandlerTS(Socket socket, ArrayList<Socket> socketList, TextManager textManager) {
+    public ClientHandlerTS(Socket socket, ArrayList<Socket> socketList, DirectoryManager dirManager) {
         this.socket = socket;
         this.socketList = socketList;
-        this.textManager = textManager;
+        this.dirManager = dirManager;
     }
 
     @Override
@@ -38,11 +38,7 @@ public class ClientHandlerTS implements Runnable {
             while (true) {
                 String command = fromClient.nextLine(); // Lettura della richiesta del client
 
-                if (command.equalsIgnoreCase("quit")) {
-                    // Se il client chiude la connessione, fai lo stesso lato server
-                    System.out.println("Sto chiudendo il socket lato server");
-                    break;
-                } else if (command.equalsIgnoreCase("edit")) {
+                if (command.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
 
                 } else if (command.equalsIgnoreCase("read")) {
@@ -50,7 +46,10 @@ public class ClientHandlerTS implements Runnable {
 
                 } else if (command.equalsIgnoreCase("create")) {
                     // TODO: Creazione di un File di testo
-
+                } else if (command.equalsIgnoreCase("quit")) {
+                    // Se il client chiude la connessione, fai lo stesso lato server
+                    System.out.println("Sto chiudendo il socket lato server");
+                    break;
                 } else {
                     // In caso di comando sconosciuto, notifica il client
                     toClient.println("Comando sconosciuto");

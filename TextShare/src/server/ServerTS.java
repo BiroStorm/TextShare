@@ -17,12 +17,12 @@ public class ServerTS {
             System.err.println("Errore, avviare nel seguente modo: java TSServer <path> <port>");
             return;
         }
-        String path = args[0];
+        String dirPath = args[0];
         int port = Integer.parseInt(args[1]);//tra 1024 e 65535
 
         //check del path
-        File f = new File(path);
-        if (!(f.exists()) || !(f.isDirectory())) {
+        File directory = new File(dirPath);
+        if (!(directory.exists()) || !(directory.isDirectory())) {
         	System.err.println("Il path inserito non esiste");
         	return;
         }
@@ -35,7 +35,7 @@ public class ServerTS {
             		+ "client attualmente connessi in scrittura\n"
             		+ "- \"quit\": disconnette eventuali client connessi e chiude il server");
             
-            TextManager textManager = new TextManager(); //gestore dei file di testo con tutti i metodi
+            DirectoryManager dirManager = new DirectoryManager(directory); //gestore dei file di testo con tutti i metodi
             
             ArrayList<Socket> socketList = new ArrayList<>();            
             Thread serverHandlerThread = new Thread(new ServerHandlerTS(listener, socketList));//passa il ServerSocket da chiudere e la lista di socket da chiudere
@@ -48,7 +48,7 @@ public class ServerTS {
                 System.out.println("Client connesso");
 
                 //Lasica la gestione a un thread dedicato
-                Thread clientHandlerThread = new Thread(new ClientHandlerTS(s, socketList, textManager));
+                Thread clientHandlerThread = new Thread(new ClientHandlerTS(s, socketList, dirManager));
                 socketList.add(s);//aggiunge il socket appena creato alla lista di socket da chiudere in caso di quit (vedi ServerHandler)
                 clientHandlerThread.start();
                 //Si rimette in ascolto di altre richieste di connessione

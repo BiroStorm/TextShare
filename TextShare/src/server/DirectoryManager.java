@@ -1,15 +1,19 @@
 package server;
 
+import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
  * Contenitore dei metodi per gestire le operazioni sui file
  */
-public class TextManager {
+public class DirectoryManager {
+	
+	private File directory;
     // ConcurrentHashMap è un HashMap Thread-Safe, ha un Lock interno.
     private ConcurrentHashMap<String, FileHandler> concurrentHM;
 
-    public TextManager() {
+    public DirectoryManager(File directory) {
+    	this.directory = directory;
         this.concurrentHM = new ConcurrentHashMap<String, FileHandler>();
     }
 
