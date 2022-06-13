@@ -1,7 +1,10 @@
 package server;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
+
+import error.IncorrectFileException;
 
 /*
  * Contenitore dei metodi per gestire le operazioni sui file
@@ -17,12 +20,20 @@ public class DirectoryManager {
         this.concurrentHM = new ConcurrentHashMap<String, FileHandler>();
     }
 
-    public void create(String Filename) {
-        // TODO: Creazione del File
-        // Controllo dell'esistenza del File
-        // Creazione del File
-        // Creazione del FileHandler relativo al file
-        // Inserimento del FileHandler nel concurrentHM
+    public boolean create(String Filename) throws IOException, IncorrectFileException {
+
+    	File f = new File(Filename);
+    	if ((f.exists()) && (f.isFile())) {
+    		//System.out.println("Test: File già esistente");
+        	return false;
+        } else {
+        	f.createNewFile();
+        	FileHandler fh = new FileHandler(directory.getAbsolutePath()+Filename);
+        	concurrentHM.put(f.getAbsolutePath(), fh);
+        	//System.out.println("Test: File creato");
+        	return true;
+        }
+    	
     }
 
     public FileHandler edit(String fileName) {

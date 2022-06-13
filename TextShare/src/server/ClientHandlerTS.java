@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane.IconifyAction;
+
 /**
  * ClientHandler implementa la gestione della connessione con il suo client, '
  * il "server vero e proprio".
@@ -37,16 +39,28 @@ public class ClientHandlerTS implements Runnable {
             // Ciclo di vita
             while (true) {
                 String command = fromClient.nextLine(); // Lettura della richiesta del client
-
-                if (command.equalsIgnoreCase("edit")) {
+                String[] splitcom = command.split(" ", 2);
+                String commandType = splitcom[0]; 
+                String commandArg = splitcom.length>1 ? splitcom[1] : "";
+                
+                if (commandType.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
 
-                } else if (command.equalsIgnoreCase("read")) {
+                } else if (commandType.equalsIgnoreCase("read")) {
                     // TODO: Modalità Lettura
 
-                } else if (command.equalsIgnoreCase("create")) {
-                    // TODO: Creazione di un File di testo
-                } else if (command.equalsIgnoreCase("quit")) {
+                } else if (commandType.equalsIgnoreCase("create")) {
+                	boolean created = dirManager.create(commandArg);
+                	
+                	if(created==true) {
+                		toClient.println("File creato correttamente");
+                		} else {
+                		toClient.println("File già esistente: il file non è stato creato");
+					}
+                	
+                	// TODO: gestire eccezione
+                	
+                } else if (commandType.equalsIgnoreCase("quit")) {
                     // Se il client chiude la connessione, fai lo stesso lato server
                     System.out.println("Sto chiudendo il socket lato server");
                     break;
