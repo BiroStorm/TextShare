@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 
-import javax.swing.plaf.basic.BasicInternalFrameTitlePane.IconifyAction;
-
 /**
  * ClientHandler implementa la gestione della connessione con il suo client, '
  * il "server vero e proprio".
@@ -40,26 +38,34 @@ public class ClientHandlerTS implements Runnable {
             while (true) {
                 String command = fromClient.nextLine(); // Lettura della richiesta del client
                 String[] splitcom = command.split(" ", 2);
-                String commandType = splitcom[0]; 
-                String commandArg = splitcom.length>1 ? splitcom[1] : "";
-                
+                String commandType = splitcom[0];
+                String filename = splitcom.length > 1 ? splitcom[1] : "";
+
                 if (commandType.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
 
                 } else if (commandType.equalsIgnoreCase("read")) {
-                    // TODO: Modalità Lettura
+
+                    this.gestioneLettura(filename, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("create")) {
-                	boolean created = dirManager.create(commandArg);
-                	
-                	if(created==true) {
-                		toClient.println("File creato correttamente");
-                		} else {
-                		toClient.println("File già esistente: il file non è stato creato");
-					}
-                	
-                	// TODO: gestire eccezione
-                	
+                    // Nota: Bisogna gestire la concorrenza sull'inserimento e creazione del file.
+                    // dati 2 thread, se entrambi procedono con la creazione di un file con lo
+                    // stesso nome
+                    // anche se, il problema prodotto non è affatto un problema...
+
+                    try {
+                        boolean created = dirManager.createNewFile(filename);
+                        if (created == true) {
+                            toClient.println("File creato correttamente");
+                        } else {
+                            toClient.println("File già esistente: il file non è stato creato");
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Errore nella Creazione di un file: " + e.getMessage());
+                        e.printStackTrace();
+                    }
+
                 } else if (commandType.equalsIgnoreCase("quit")) {
                     // Se il client chiude la connessione, fai lo stesso lato server
                     System.out.println("Sto chiudendo il socket lato server");
@@ -94,6 +100,36 @@ public class ClientHandlerTS implements Runnable {
             return;
         }
 
+    }
+
+    private void gestioneLettura(String filename, Scanner input, PrintWriter output) {
+        try {
+            FileHandler fh = dirManager.read(filename);
+            output.println("Attesa inizio Sessione di Scrittura...");
+            String testo = fh.OpenReadSession();
+            output.println("Avviata Sessione di Lettura per il file " + filename);
+
+            output.print(testo);
+            output.flush();
+            while (!input.nextLine().equalsIgnoreCase(":close")) {
+                // do nothing...
+                output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
+            }
+            fh.CloseReadSession();
+            output.println("Sessione di scrittura Terminata.");
+
+            /*
+             * In questo caso, avviene una lettura completa di tutto il file.
+             * Il caso migliore sarebbe quello di stampare riga per riga, o anche
+             * tramite un input dell'utente (es. Invio).
+             * In tale caso bisognerebbe modificare il OpenReadSession e creare un
+             * nuovo metodo in FileHandler, come ad esempio Read() e farlo simile
+             * alla procedura di Write.
+             */
+        } catch (Exception e) {
+            // System.out.println("Errore nella Lettura di un file: " + e.getMessage());
+            output.println("Il file " + filename + " non esiste!");
+        }
     }
 
 }

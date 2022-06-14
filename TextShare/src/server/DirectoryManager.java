@@ -1,39 +1,33 @@
 package server;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
-
-import error.IncorrectFileException;
 
 /*
  * Contenitore dei metodi per gestire le operazioni sui file
  */
 public class DirectoryManager {
-	
-	private File directory;
+
+    private File directory;
     // ConcurrentHashMap è un HashMap Thread-Safe, ha un Lock interno.
     private ConcurrentHashMap<String, FileHandler> concurrentHM;
 
     public DirectoryManager(File directory) {
-    	this.directory = directory;
+        this.directory = directory;
         this.concurrentHM = new ConcurrentHashMap<String, FileHandler>();
     }
 
-    public boolean create(String Filename) throws IOException, IncorrectFileException {
+    public boolean createNewFile(String Filename) throws Exception {
 
-    	File f = new File(Filename);
-    	if ((f.exists()) && (f.isFile())) {
-    		//System.out.println("Test: File già esistente");
-        	return false;
+        File f = new File(directory.getPath(), Filename);
+        // il metodo createNewFile controlla già di per se se il file esiste o meno.
+        if (f.createNewFile()) {
+            this.InsertIntoCHM(f.getPath());
+            return true;
         } else {
-        	f.createNewFile();
-        	FileHandler fh = new FileHandler(directory.getAbsolutePath()+Filename);
-        	concurrentHM.put(f.getAbsolutePath(), fh);
-        	//System.out.println("Test: File creato");
-        	return true;
+            return false;
         }
-    	
+
     }
 
     public FileHandler edit(String fileName) {
@@ -45,12 +39,24 @@ public class DirectoryManager {
         return null;
     }
 
-    public FileHandler read(String name) {
+    public FileHandler read(String filename) throws Exception {
         // TODO: Lettura del file
         // Controlla che sia presente in concurrentHM
         // Se non è presente allora controlla se il file esiste
         // Se esiste allora crea nuova istanza di FileHandler
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" +"filename");
+        
+        if(fh == null){
+            // non è stato caricato ancora sul CHM, quindi lo carichiamo
+            fh = this.InsertIntoCHM(directory.getPath() + "\\" + filename);
+        }
+        return fh;
 
-        return null;
+    }
+
+    private FileHandler InsertIntoCHM(String filePath) throws Exception {
+        FileHandler fh = new FileHandler(filePath);
+        concurrentHM.put(filePath, fh);
+        return fh;
     }
 }

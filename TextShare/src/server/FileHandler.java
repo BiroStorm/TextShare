@@ -9,8 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import error.IncorrectFileException;
-
 /**
  * Gestisce il singolo file dato il path in input (senza ".txt")
  * e usa il ReadWriteLock per gestire i problemi del Reader&Writer.
@@ -31,12 +29,16 @@ public class FileHandler {
     private ReentrantReadWriteLock lock;
     private BufferedWriter bw;
 
-    public FileHandler(String filePath) throws IncorrectFileException {
-        // TODO: Il controllo dell'esistenza del File deve essere spostato su TextManager.
-        File f = new File(filePath + ".txt");
+    public FileHandler(String filePath) throws Exception {
+        // TODO: Il controllo dell'esistenza del File deve essere spostato su
+        // TextManager.
+        File f = new File(filePath);
+
         if (!f.exists() || f.isDirectory()) {
             // Se è una directory o il file non esiste lanciamo l'eccezione.
-            throw new IncorrectFileException("Il file non esiste o è una directory! File: " + filePath);
+
+            // Nota: Meglio usare una custom Exception, così da non renderla così generica.
+            throw new Exception("Il file non esiste o è una directory! File: " + filePath);
         }
         this.file = f;
         this.lock = new ReentrantReadWriteLock();
@@ -50,18 +52,22 @@ public class FileHandler {
      * @throws IOException
      * @see {@link #CloseReadSession()}
      */
-    public void OpenReadSession() throws IOException, FileNotFoundException {
+    public String OpenReadSession() throws IOException, FileNotFoundException {
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
         // Sessione di Lettura:
         BufferedReader br = new BufferedReader(new FileReader(file));
 
-        // TODO: Completare la lettura del file.
+        String testo = "";
+        while (br.ready()) {
+            testo += br.readLine() + "\n";
+        }
 
         // Visto che nel Progetto non viene implementata nessuna azione oltre
         // a quella della chiusura, possiamo fare la chiusura dello stream
         // direttamente in questo metodo (a differenza della scrittura)
         br.close();
+        return testo;
 
         /*
          * sarebbe opportuno rilasciare infondo il Lock, ma lo si
