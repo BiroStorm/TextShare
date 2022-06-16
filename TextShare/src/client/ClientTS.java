@@ -1,10 +1,8 @@
 package client;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.NoSuchElementException;
-import java.util.Scanner;
 
 /*
  * ClientTS implementa la logica del client. Prende come argomenti host e porta, si connette creando un socket lato client.
@@ -55,37 +53,21 @@ public class ClientTS {
                     + "-\"delete\": seguito da <nome_file_da_eliminare>.txt, elimita tale file\n"
                     + "-\"quit\": arresta il client\n");
 
-            Scanner fromServer = new Scanner(s.getInputStream()); // Wrapper per ricevere dal server
-            PrintWriter toServer = new PrintWriter(s.getOutputStream(), true); // Wrapper per inviare al server
+            Thread senderThread = new Thread(new Sender(s));
+            Thread receiverThread = new Thread(new Receiver(s, senderThread));
+            senderThread.start();
+            receiverThread.start();
 
-            Scanner userInput = new Scanner(System.in); // Scanner per leggere i comandi da terminale
-
-            // Ciclo di vita del client
-            while (true) {
-            	System.out.println("\nInserire un comando:");
-                String request = userInput.nextLine(); // Lettura della richiesta dell'utente
-                toServer.println(request); // inoltro della richista al server
-
-                // TODO-Nota: Se si è in Sessione scrittura o Lettura, non deve valere questo
-                // if!
-                if (request.equalsIgnoreCase("quit")) {
-                    // Se l'utente scrive quit, interrompe il ciclo
-                    break;
-                } else {
-                    // TODO: Delegare ad un altro Thread l'input da lato Server, così
-                    // da non rendere bloccante il thread principale.
-                    // Visto che hashNextLine ritorna sempre true, rimanendo in attesa di un input.
-                    // while (fromServer.hasNextLine()) {
-                    String response = fromServer.nextLine(); // Lettura della risposta del server
-                    System.out.println(response); // stampa della risposta
-                    // }
-                }
+            try {
+                senderThread.join();
+                receiverThread.join();
+                s.close();
+            } catch (InterruptedException e) {
+                return;
             }
 
             // Al termine del ciclo di vita, viene chiusa la connessione e lo scanner
             System.out.println("Sto chiudendo il socket lato client");
-            s.close();
-            userInput.close();
             System.out.println("Disconessione avvenuta con successo");
 
         } catch (IOException e) {

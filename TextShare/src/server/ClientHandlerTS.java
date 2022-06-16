@@ -46,15 +46,15 @@ public class ClientHandlerTS implements Runnable {
 
                 if (commandType.equalsIgnoreCase("list")) {
                    
-                	// FIXME: se il comando viene eseguito quando il programma è in una directory che contiene file non creati dal programma,
-                	// l'ultima informazione portera' ad un errore perché non non essendo stato il programma a creare quel/quei file,
+                	// FIXME: se il comando viene eseguito quando il programma ï¿½ in una directory che contiene file non creati dal programma,
+                	// l'ultima informazione portera' ad un errore perchï¿½ non non essendo stato il programma a creare quel/quei file,
                 	// non esiste il FileHandler di quel file.
                 	// Provando ad eseguire su una cartella vuota, creando prima uno o piu' file, tutto funziona correttamente.
                 	// All'apertura del programma bisogna fare in modo che anche ai file gia' eistenti venga collegato un relativo FileHandler
                 	
                 	File[] filesList = dirManager.getDirectory().listFiles();
                 	if (filesList.length == 0) {
-                		toClient.println("Non c'è nessun file");
+                		toClient.println("Non c'ï¿½ nessun file");
                 	} else {
                 		DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
                 		toClient.println("Lista dei file presenti sul server:");
@@ -148,8 +148,9 @@ public class ClientHandlerTS implements Runnable {
             String testo = fh.OpenReadSession();
             output.println("Avviata Sessione di Lettura per il file " + filename);
 
-            output.print(testo);
+            output.println(testo);
             output.flush();
+            output.println("Codice 101"); // Possibilmente da modificare
             while (!input.nextLine().equalsIgnoreCase(":close")) {
                 // do nothing...
                 output.println("\033[3mPer uscire dalla modalitÃ  scrittura inviare :close\033[0m");
