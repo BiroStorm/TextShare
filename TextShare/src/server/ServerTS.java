@@ -52,7 +52,7 @@ public class ServerTS {
                                                                            // metodi
 
             ArrayList<Socket> socketList = new ArrayList<>();
-            Thread serverHandlerThread = new Thread(new ServerHandlerTS(listener, socketList));// passa il ServerSocket
+            Thread serverHandlerThread = new Thread(new ServerHandlerTS(listener, socketList, dirManager));// passa il ServerSocket
                                                                                                // da chiudere e la lista
                                                                                                // di socket da chiudere
             serverHandlerThread.start();// gestira' i comandi server di info e quit

@@ -31,7 +31,7 @@ public class FileHandler {
     
     // contatori degli utenti in lettura o scrittura (utili per il comando info del client)
     private int readingUsers;
-    private boolean UserIsWriting = true;
+    private boolean UserIsWriting = false;
 
     public int getReadingUsers() {
     	return this.readingUsers;
