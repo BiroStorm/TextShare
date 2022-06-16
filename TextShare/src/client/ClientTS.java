@@ -53,7 +53,8 @@ public class ClientTS {
                     + "   - ogni comando che non inizia con \":\" viene interpretato come una riga di testo che viene aggiunta in coda al file\n"
                     + "- \"rename\": seguito da <nome_file_da _rinominare>.txt e da <nuovo_nome>.txt, rinomina il file\n"
                     + "-\"delete\": seguito da <nome_file_da_eliminare>.txt, elimita tale file\n"
-                    + "-\"quit\": arresta il client");
+                    + "-\"quit\": arresta il client\n"
+                    + "\nInserire un comando:");
 
             Scanner fromServer = new Scanner(s.getInputStream()); // Wrapper per ricevere dal server
             PrintWriter toServer = new PrintWriter(s.getOutputStream(), true); // Wrapper per inviare al server

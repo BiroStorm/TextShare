@@ -1,8 +1,11 @@
 package server;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
@@ -21,6 +24,9 @@ public class ClientHandlerTS implements Runnable {
     private Socket socket;
     private ArrayList<Socket> socketList = new ArrayList<>();
     private DirectoryManager dirManager;
+    
+    private int numLettori = 2;
+    private int numScrittori = 1;
 
     public ClientHandlerTS(Socket socket, ArrayList<Socket> socketList, DirectoryManager dirManager) {
         this.socket = socket;
@@ -41,13 +47,34 @@ public class ClientHandlerTS implements Runnable {
                 String commandType = splitcom[0];
                 String filename = splitcom.length > 1 ? splitcom[1] : "";
 
-                if (commandType.equalsIgnoreCase("edit")) {
-                    // TODO: Modalità Scrittura
-
-                } else if (commandType.equalsIgnoreCase("read")) {
-
-                    this.gestioneLettura(filename, fromClient, toClient);
-
+                if (commandType.equalsIgnoreCase("list")) {
+                    // TODO: restituire lista dei file presenti sul server con le seguenti informazioni:
+                	// il nome del file
+                	// la data e l'ora dell'ultima modifica
+                	//quanti utenti stanno attualmente leggendo o modificando il file
+                
+                	/*
+                	toClient.println("Lista dei file presenti sul server:");
+                	ArrayList<File> fileList = dirManager.getFilesList();
+                	for (File f : fileList) {
+                		toClient.println("\n" + f.getName() + ", ultima modifica: " + f.lastModified());
+                	}
+                	*/
+                	
+                	File[] filesList = dirManager.getDirectory().listFiles();
+                	if (filesList.length == 0) {
+                		toClient.println("Non c'� nessun file");
+                	} else {
+                		DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
+                		toClient.println("Lista dei file presenti sul server:");
+                		for (File f : filesList) {
+                			toClient.println("\nNome File: " + f.getName()
+                			+ "\nUltima modifica: " + sdf.format(f.lastModified())
+                			+ "\nNumero utenti che stanno attualmente leggendo o modificando il file: " +
+                			/*TODO: numero utenti che stanno usando questo file*/ "\n");
+                		}
+                	}
+                	
                 } else if (commandType.equalsIgnoreCase("create")) {
                     // Nota: Bisogna gestire la concorrenza sull'inserimento e creazione del file.
                     // dati 2 thread, se entrambi procedono con la creazione di un file con lo
@@ -66,6 +93,19 @@ public class ClientHandlerTS implements Runnable {
                         e.printStackTrace();
                     }
 
+                } else if (commandType.equalsIgnoreCase("read")) {
+
+                    this.gestioneLettura(filename, fromClient, toClient);
+
+                } else if (commandType.equalsIgnoreCase("edit")) {
+                    // TODO: Modalità Scrittura
+
+                } else if (commandType.equalsIgnoreCase("rename")) {
+                	// TODO: implementare comando rename
+                	
+                } else if (commandType.equalsIgnoreCase("delete")) {
+                	// TODO: implementare comando delete
+                
                 } else if (commandType.equalsIgnoreCase("quit")) {
                     // Se il client chiude la connessione, fai lo stesso lato server
                     System.out.println("Sto chiudendo il socket lato server");

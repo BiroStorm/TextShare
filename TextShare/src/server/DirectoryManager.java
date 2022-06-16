@@ -1,6 +1,8 @@
 package server;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
@@ -53,6 +55,27 @@ public class DirectoryManager {
         return fh;
 
     }
+    
+    public File getDirectory() {
+    	return this.directory;
+    }
+    /*
+    public ArrayList<File> getFilesList() {
+    	//Recupero il set di key dalla CouncurrentHashMap      
+    	Set<String> keySet = concurrentHM.keySet(); 
+    	         
+    	//Creo un arraylist delle key passando il set appena creato      
+    	ArrayList<String> filePathList = new ArrayList<String>(keySet);
+    	
+    	//Trasformo l'ArrayList di stringhe in ArrayList di File
+    	ArrayList<File> fileList = new ArrayList<File>();
+    	for (String filePath : filePathList) {
+    		fileList.add(new File(filePath));
+    	}
+    	return fileList;
+    	
+    }
+    */
 
     private FileHandler InsertIntoCHM(String filePath) throws Exception {
         FileHandler fh = new FileHandler(filePath);
