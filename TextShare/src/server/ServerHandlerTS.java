@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -37,11 +35,9 @@ public class ServerHandlerTS implements Runnable {
 		while (true) {
 			String command = userInput.nextLine();
 		
-			//TODO: completare comando "info" stampando le informazioni vere e proprie
+			// FIXME: stesso problema di list in ClientHandlerTS, i file non hanno associato un loro FileHandler
 			if (command.equalsIgnoreCase("info")) {
-				/*
-				 * FIXME: stesso problema di list in ClientHandlerTS, i file non hanno associato un loro FileHandler
-				 */
+				
 				// conto il numero di client connessi in lettura e in scrittura
 				File[] filesList = this.dirManager.getDirectory().listFiles();
         		for (File f : filesList) {
@@ -56,7 +52,9 @@ public class ServerHandlerTS implements Runnable {
 						+ "- Numero di client attualmente connessi in scrittura: "  + this.totalWritingUsers);
 				// setto a 0 cos� che al prossimo comando "list" non si vadano a sommare due volte gli stessi file.
 				this.totalReadingUsers = 0;
+				
 			} else if (command.equalsIgnoreCase("quit")) {
+				
 				try {
 					listener.close();//il server non accetta più connessioni ma i ClientHandler continuano a funzionare.
 					System.out.println("ServerSocket chiuso, il server non accetta più connessioni");
@@ -72,6 +70,7 @@ public class ServerHandlerTS implements Runnable {
 				userInput.close();
 				System.out.println("SERVER CHIUSO");
 				return;
+				
 			} else {
 				System.out.println("Comando sconosciuto");
 			}

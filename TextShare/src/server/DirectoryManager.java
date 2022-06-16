@@ -1,9 +1,6 @@
 package server;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
@@ -64,18 +61,6 @@ public class DirectoryManager {
         return fh;
 
     }
-    
-    /*
-    public ArrayList<FileHandler> getFileHandlerList() {
-    	// Prende una Collection di FileHandler dalla HashMap
-        Collection<FileHandler> values = concurrentHM.values();
-  
-        // Crea un ArrayList di FileHandler
-        ArrayList<FileHandler> fhList = new ArrayList<>(values);
-        
-        return fhList;
-    }
-    */
 
     private FileHandler InsertIntoCHM(String filePath) throws Exception {
         FileHandler fh = new FileHandler(filePath);

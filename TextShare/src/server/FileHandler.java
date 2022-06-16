@@ -43,7 +43,7 @@ public class FileHandler {
     
     public FileHandler(String filePath) throws Exception {
         // TODO: Il controllo dell'esistenza del File deve essere spostato su
-        // TextManager.
+        // DirectoryManager.
         File f = new File(filePath);
 
         if (!f.exists() || f.isDirectory()) {

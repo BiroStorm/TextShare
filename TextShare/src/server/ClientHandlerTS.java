@@ -50,6 +50,7 @@ public class ClientHandlerTS implements Runnable {
                 	// l'ultima informazione portera' ad un errore perché non non essendo stato il programma a creare quel/quei file,
                 	// non esiste il FileHandler di quel file.
                 	// Provando ad eseguire su una cartella vuota, creando prima uno o piu' file, tutto funziona correttamente.
+                	// All'apertura del programma bisogna fare in modo che anche ai file gia' eistenti venga collegato un relativo FileHandler
                 	
                 	File[] filesList = dirManager.getDirectory().listFiles();
                 	if (filesList.length == 0) {
