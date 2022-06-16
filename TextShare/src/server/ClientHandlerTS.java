@@ -24,9 +24,6 @@ public class ClientHandlerTS implements Runnable {
     private Socket socket;
     private ArrayList<Socket> socketList = new ArrayList<>();
     private DirectoryManager dirManager;
-    
-    private int numLettori = 2;
-    private int numScrittori = 1;
 
     public ClientHandlerTS(Socket socket, ArrayList<Socket> socketList, DirectoryManager dirManager) {
         this.socket = socket;
@@ -48,18 +45,11 @@ public class ClientHandlerTS implements Runnable {
                 String filename = splitcom.length > 1 ? splitcom[1] : "";
 
                 if (commandType.equalsIgnoreCase("list")) {
-                    // TODO: restituire lista dei file presenti sul server con le seguenti informazioni:
-                	// il nome del file
-                	// la data e l'ora dell'ultima modifica
-                	//quanti utenti stanno attualmente leggendo o modificando il file
-                
-                	/*
-                	toClient.println("Lista dei file presenti sul server:");
-                	ArrayList<File> fileList = dirManager.getFilesList();
-                	for (File f : fileList) {
-                		toClient.println("\n" + f.getName() + ", ultima modifica: " + f.lastModified());
-                	}
-                	*/
+                   
+                	// FIXME: se il comando viene eseguito quando il programma è in una directory che contiene file non creati dal programma,
+                	// l'ultima informazione portera' ad un errore perché non non essendo stato il programma a creare quel/quei file,
+                	// non esiste il FileHandler di quel file.
+                	// Provando ad eseguire su una cartella vuota, creando prima uno o piu' file, tutto funziona correttamente.
                 	
                 	File[] filesList = dirManager.getDirectory().listFiles();
                 	if (filesList.length == 0) {
@@ -68,10 +58,18 @@ public class ClientHandlerTS implements Runnable {
                 		DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
                 		toClient.println("Lista dei file presenti sul server:");
                 		for (File f : filesList) {
+                			FileHandler fh = dirManager.getCHM().get(f.getPath());
+                			
+                			int totReadingWritingUsers;
+                			if (fh.getUserIsWriting())
+                				totReadingWritingUsers = 1;
+                			else
+                				totReadingWritingUsers = fh.getReadingUsers();
+                			
                 			toClient.println("\nNome File: " + f.getName()
                 			+ "\nUltima modifica: " + sdf.format(f.lastModified())
-                			+ "\nNumero utenti che stanno attualmente leggendo o modificando il file: " +
-                			/*TODO: numero utenti che stanno usando questo file*/ "\n");
+                			+ "\nNumero utenti che stanno attualmente leggendo o modificando il file: "
+                			+ totReadingWritingUsers + "\n");
                 		}
                 	}
                 	

@@ -28,7 +28,19 @@ public class FileHandler {
     private File file;
     private ReentrantReadWriteLock lock;
     private BufferedWriter bw;
+    
+    // contatori degli utenti in lettura o scrittura (utili per il comando info del client)
+    private int readingUsers;
+    private boolean UserIsWriting = true;
 
+    public int getReadingUsers() {
+    	return this.readingUsers;
+    }
+    
+    public boolean getUserIsWriting() {
+    	return this.UserIsWriting;
+    }
+    
     public FileHandler(String filePath) throws Exception {
         // TODO: Il controllo dell'esistenza del File deve essere spostato su
         // TextManager.
@@ -55,6 +67,8 @@ public class FileHandler {
     public String OpenReadSession() throws IOException, FileNotFoundException {
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
+        // incrementa il counter del numero di client in lettura su questo file
+        increase(this.readingUsers);
         // Sessione di Lettura:
         BufferedReader br = new BufferedReader(new FileReader(file));
 
@@ -83,6 +97,8 @@ public class FileHandler {
      */
     public void CloseReadSession() {
         this.lock.readLock().unlock();
+        // decrementa il counter del numero di client in lettura su questo file
+        decrease(this.readingUsers);
     }
 
     /**
@@ -95,6 +111,7 @@ public class FileHandler {
     public void OpenWriteSession() throws IOException, FileNotFoundException {
         // Prendiamo il Lock in scrittura.
         this.lock.writeLock().lock();
+        this.UserIsWriting = true;
         this.bw = new BufferedWriter(new FileWriter(file));
     }
 
@@ -128,8 +145,19 @@ public class FileHandler {
      */
     public void CloseWriteSession() throws IOException {
         this.lock.writeLock().unlock();
-
+        // 
+        this.UserIsWriting = false;
         // è sempre buona norma chiudere il buffered quando si finisce.
         bw.close();
+    }
+    
+    // incrementa assicurandosi l'assenza di interferenze
+    private synchronized void increase(int x) {
+    	x++;
+    }
+    
+    // decrementa assicurandosi l'assenza di interferenze
+    private synchronized void decrease(int x) {
+    	x--;
     }
 }
