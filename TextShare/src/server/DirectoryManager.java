@@ -38,6 +38,24 @@ public class DirectoryManager {
 
     }
 
+    public int delete(String filename) {
+		File f = new File(directory.getPath(), filename);
+    	
+    	if (!f.exists()) {
+    		return 0;
+		}  else {
+			if (f.delete()) {
+				if (concurrentHM.containsKey(f.getPath())) {
+					concurrentHM.remove(f.getPath());
+				}
+
+				return 2;
+			} else {
+				return 1;
+			}
+		}
+	}
+
     public FileHandler edit(String fileName) {
         // TODO: Modifica e scrittura del file
         // Controlla che sia presente in concurrentHM

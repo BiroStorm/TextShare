@@ -58,7 +58,7 @@ public class ClientHandlerTS implements Runnable {
                 			+ "\nUltima modifica: " + sdf.format(f.lastModified()));
                 			
                 			// se se il file e' in HashMap conto il numero di utenti in lettura/scrittura
-                			// altrimenti so che nessun utente pu� essere in lettura/scrittura per quel file.
+                			// altrimenti so che nessun utente pu� essere in lettura/scrittura per quel file.
                 			if (dirManager.getCHM().containsKey(f.getPath())) {
                 				FileHandler fh = dirManager.getCHM().get(f.getPath());
                     			
@@ -107,8 +107,17 @@ public class ClientHandlerTS implements Runnable {
                 	// TODO: implementare comando rename
                 	
                 } else if (commandType.equalsIgnoreCase("delete")) {
-                	// TODO: implementare comando delete
-                
+           
+                    int deleted = dirManager.delete(filename);
+                    
+                    if (deleted == 0) {
+                        toClient.println("Non è stato possibile eliminare il file: file non esistente");
+                    } else if (deleted == 1) {
+                        toClient.println("Non è stato possibile eliminare il file");
+                    } else {
+                    	toClient.println("Il file è stato eliminato correttamente");
+					}
+                    
                 } else if (commandType.equalsIgnoreCase("quit")) {
                     // Se il client chiude la connessione, fai lo stesso lato server
                     System.out.println("Sto chiudendo il socket lato server");
