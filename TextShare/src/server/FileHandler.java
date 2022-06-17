@@ -96,9 +96,12 @@ public class FileHandler {
      * Chiusura della Sessione in Lettura.
      */
     public void CloseReadSession() {
-        this.lock.readLock().unlock();
-        // decrementa il counter del numero di client in lettura su questo file
-        decrease(this.readingUsers);
+        try {
+        	this.lock.readLock().unlock();
+        } finally {
+        	// decrementa il counter del numero di client in lettura su questo file
+            decrease(this.readingUsers);
+        }
     }
 
     /**
@@ -144,11 +147,13 @@ public class FileHandler {
      * @throws IOException
      */
     public void CloseWriteSession() throws IOException {
-        this.lock.writeLock().unlock();
-        // 
-        this.UserIsWriting = false;
-        // è sempre buona norma chiudere il buffered quando si finisce.
-        bw.close();
+        try {
+        	this.lock.writeLock().unlock();
+        	// è sempre buona norma chiudere il buffered quando si finisce.
+        	bw.close();
+        } finally {
+        	this.UserIsWriting = false;
+        }
     }
     
     // incrementa assicurandosi l'assenza di interferenze
