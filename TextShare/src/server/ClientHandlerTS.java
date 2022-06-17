@@ -45,32 +45,35 @@ public class ClientHandlerTS implements Runnable {
                 String filename = splitcom.length > 1 ? splitcom[1] : "";
 
                 if (commandType.equalsIgnoreCase("list")) {
-                   
-                	// FIXME: se il comando viene eseguito quando il programma � in una directory che contiene file non creati dal programma,
-                	// l'ultima informazione portera' ad un errore perch� non non essendo stato il programma a creare quel/quei file,
-                	// non esiste il FileHandler di quel file.
-                	// Provando ad eseguire su una cartella vuota, creando prima uno o piu' file, tutto funziona correttamente.
-                	// All'apertura del programma bisogna fare in modo che anche ai file gia' eistenti venga collegato un relativo FileHandler
                 	
                 	File[] filesList = dirManager.getDirectory().listFiles();
                 	if (filesList.length == 0) {
                 		toClient.println("Non c'� nessun file");
                 	} else {
                 		DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
-                		toClient.println("Lista dei file presenti sul server:");
+                		toClient.println("Lista dei file presenti sul server:\n");
                 		for (File f : filesList) {
-                			FileHandler fh = dirManager.getCHM().get(f.getPath());
                 			
-                			int totReadingWritingUsers;
-                			if (fh.getUserIsWriting())
-                				totReadingWritingUsers = 1;
-                			else
-                				totReadingWritingUsers = fh.getReadingUsers();
+                			toClient.println("Nome File: " + f.getName()
+                			+ "\nUltima modifica: " + sdf.format(f.lastModified()));
                 			
-                			toClient.println("\nNome File: " + f.getName()
-                			+ "\nUltima modifica: " + sdf.format(f.lastModified())
-                			+ "\nNumero utenti che stanno attualmente leggendo o modificando il file: "
-                			+ totReadingWritingUsers + "\n");
+                			// se se il file e' in HashMap conto il numero di utenti in lettura/scrittura
+                			// altrimenti so che nessun utente pu� essere in lettura/scrittura per quel file.
+                			if (dirManager.getCHM().containsKey(f.getPath())) {
+                				FileHandler fh = dirManager.getCHM().get(f.getPath());
+                    			
+                    			int totReadingWritingUsers;
+                    			if (fh.getUserIsWriting())
+                    				totReadingWritingUsers = 1;
+                    			else
+                    				totReadingWritingUsers = fh.getReadingUsers();
+                    			
+                    			toClient.println("Numero utenti che stanno attualmente leggendo o modificando il file: "
+                    			+ totReadingWritingUsers + "\n");
+                			} else {
+                				toClient.println("Numero utenti che stanno attualmente leggendo o modificando il file: 0\n");
+                			}
+                			
                 		}
                 	}
                 	
@@ -151,6 +154,7 @@ public class ClientHandlerTS implements Runnable {
             output.println(testo);
             output.flush();
             output.println("Codice 101"); // Possibilmente da modificare
+            output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
             while (!input.nextLine().equalsIgnoreCase(":close")) {
                 // do nothing...
                 output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");

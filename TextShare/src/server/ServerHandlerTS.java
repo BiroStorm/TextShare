@@ -35,16 +35,18 @@ public class ServerHandlerTS implements Runnable {
 		while (true) {
 			String command = userInput.nextLine();
 		
-			// FIXME: stesso problema di list in ClientHandlerTS, i file non hanno associato un loro FileHandler
 			if (command.equalsIgnoreCase("info")) {
 				
-				// conto il numero di client connessi in lettura e in scrittura
 				File[] filesList = this.dirManager.getDirectory().listFiles();
         		for (File f : filesList) {
-        			FileHandler fh = dirManager.getCHM().get(f.getPath());
-        			this.totalReadingUsers += fh.getReadingUsers();
-        			if (fh.getUserIsWriting())
-        				this.totalWritingUsers += 1;
+        			// se il file e' in HashMap conto il numero di client connessi in lettura e in scrittura
+        			// altrimenti so per certo che per quel file nessuno può essere in scrittura o lettura
+        			if (dirManager.getCHM().containsKey(f.getPath())) {
+        				FileHandler fh = dirManager.getCHM().get(f.getPath());
+        				this.totalReadingUsers += fh.getReadingUsers();
+        				if (fh.getUserIsWriting())
+        					this.totalWritingUsers += 1;
+        			}
         		}
         		// stampo le informazioni
 				System.out.println("- Numero di file gestiti: " + filesList.length + "\n"
