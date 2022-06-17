@@ -101,6 +101,7 @@ public class ClientHandlerTS implements Runnable {
 
                 } else if (commandType.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
+                	// TODO: incremento contatori scrittura
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
                 	// TODO: implementare comando rename
@@ -149,6 +150,9 @@ public class ClientHandlerTS implements Runnable {
             FileHandler fh = dirManager.read(filename);
             output.println("Attesa inizio Sessione di Scrittura...");
             String testo = fh.OpenReadSession();
+            // incrementa il counter del numero di client in lettura su questo file
+            fh.increaseReadingUsersCounter();
+            try {
             output.println("Avviata Sessione di Lettura per il file " + filename);
 
             output.println(testo);
@@ -161,6 +165,11 @@ public class ClientHandlerTS implements Runnable {
             }
             fh.CloseReadSession();
             output.println("Sessione di scrittura Terminata.");
+            } finally {
+            	// Qualsiasi cosa accada dopo l'incremento (un crash del client)
+            	// comunque decrementa il counter del numero di client in lettura su questo file
+                fh.decreaseReadingUsersCounter();
+            }
 
             /*
              * In questo caso, avviene una lettura completa di tutto il file.

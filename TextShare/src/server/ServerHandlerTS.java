@@ -40,7 +40,7 @@ public class ServerHandlerTS implements Runnable {
 				File[] filesList = this.dirManager.getDirectory().listFiles();
         		for (File f : filesList) {
         			// se il file e' in HashMap conto il numero di client connessi in lettura e in scrittura
-        			// altrimenti so per certo che per quel file nessuno può essere in scrittura o lettura
+        			// se il file non e' in HashMap so per certo che per quel file nessuno può essere in scrittura o lettura
         			if (dirManager.getCHM().containsKey(f.getPath())) {
         				FileHandler fh = dirManager.getCHM().get(f.getPath());
         				this.totalReadingUsers += fh.getReadingUsers();

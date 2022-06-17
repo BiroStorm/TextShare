@@ -29,8 +29,8 @@ public class FileHandler {
     private ReentrantReadWriteLock lock;
     private BufferedWriter bw;
     
-    // contatori degli utenti in lettura o scrittura (utili per il comando info del client)
-    private int readingUsers;
+    // contatori degli utenti in lettura o scrittura (utili per il comando info del server e list del client)
+    public int readingUsers = 0;
     private boolean UserIsWriting = false;
 
     public int getReadingUsers() {
@@ -67,8 +67,6 @@ public class FileHandler {
     public String OpenReadSession() throws IOException, FileNotFoundException {
         // Continua se il Lock in lettura Ã¨ disponibile:
         this.lock.readLock().lock();
-        // incrementa il counter del numero di client in lettura su questo file
-        increase(this.readingUsers);
         // Sessione di Lettura:
         BufferedReader br = new BufferedReader(new FileReader(file));
 
@@ -96,12 +94,7 @@ public class FileHandler {
      * Chiusura della Sessione in Lettura.
      */
     public void CloseReadSession() {
-        try {
-        	this.lock.readLock().unlock();
-        } finally {
-        	// decrementa il counter del numero di client in lettura su questo file
-            decrease(this.readingUsers);
-        }
+        this.lock.readLock().unlock();
     }
 
     /**
@@ -114,7 +107,6 @@ public class FileHandler {
     public void OpenWriteSession() throws IOException, FileNotFoundException {
         // Prendiamo il Lock in scrittura.
         this.lock.writeLock().lock();
-        this.UserIsWriting = true;
         this.bw = new BufferedWriter(new FileWriter(file));
     }
 
@@ -155,14 +147,18 @@ public class FileHandler {
         	this.UserIsWriting = false;
         }
     }
-    
-    // incrementa assicurandosi l'assenza di interferenze
-    private synchronized void increase(int x) {
-    	x++;
+ 
+    // incrementa il contatore dei lettori assicurandosi l'assenza di interferenze
+    public synchronized void increaseReadingUsersCounter() {
+    	//FIXME: dal secondo thread in poi che invoca questo metodo, se non è a 0, non si incrementa.
+    	this.readingUsers += 1;
+    	System.out.println(this.readingUsers);
+    }
+    // decrementa il contatore dei lettori assicurandosi l'assenza di interferenze
+    public synchronized void decreaseReadingUsersCounter() {
+    	//FIXME: dal secondo thread in poi che invoca questo metodo, non si decrementa.
+    	this.readingUsers -= 1;
+    	System.out.println(this.readingUsers);
     }
     
-    // decrementa assicurandosi l'assenza di interferenze
-    private synchronized void decrease(int x) {
-    	x--;
-    }
 }
