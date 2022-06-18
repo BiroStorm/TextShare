@@ -4,9 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
@@ -25,11 +27,19 @@ public class ClientHandlerTS implements Runnable {
     private Socket socket;
     private ArrayList<Socket> socketList = new ArrayList<>();
     private DirectoryManager dirManager;
+    private final String IDENTIFIER;
 
     public ClientHandlerTS(Socket socket, ArrayList<Socket> socketList, DirectoryManager dirManager) {
         this.socket = socket;
         this.socketList = socketList;
         this.dirManager = dirManager;
+
+        // genera un identificatore del Client.
+        SecureRandom random = new SecureRandom();
+        Base64.Encoder encoder = Base64.getUrlEncoder().withoutPadding();
+        byte[] buffer = new byte[16];
+        random.nextBytes(buffer);
+        this.IDENTIFIER = encoder.encodeToString(buffer);
     }
 
     @Override
@@ -38,10 +48,14 @@ public class ClientHandlerTS implements Runnable {
             Scanner fromClient = new Scanner(socket.getInputStream()); // Wrapper per ricevere dal client
             PrintWriter toClient = new PrintWriter(socket.getOutputStream(), true); // Wrapper per inviare al client
 
+            // Invio l'Identificatore al Client come prima comunicazione.
+            System.out.println("Client " + this.IDENTIFIER + " in comunicazione...");
+            toClient.println(this.IDENTIFIER);
+
             // Ciclo di vita
             while (true) {
                 String command = fromClient.nextLine(); // Lettura della richiesta del client
-                String[] splitcom = command.split(" ", 2);
+                String[] splitcom = command.split(" ");
                 String commandType = splitcom[0];
                 String filename = splitcom.length > 1 ? splitcom[1] : "";
 
@@ -90,7 +104,8 @@ public class ClientHandlerTS implements Runnable {
                     
                 } else if (commandType.equalsIgnoreCase("quit")) {
                     // Se il client chiude la connessione, fai lo stesso lato server
-                    System.out.println("Sto chiudendo il socket lato server");
+                    toClient.println(this.IDENTIFIER + "503");
+                    System.out.println("Client " + this.IDENTIFIER + " quitting...");
                     break;
                 } else {
                     // In caso di comando sconosciuto, notifica il client
@@ -99,17 +114,12 @@ public class ClientHandlerTS implements Runnable {
             }
 
             // rimuove il socket dalla lista dei socket.
-            for (Socket s : socketList) {
-                if (this.socket.equals(s)) {
-                    socketList.remove(s);
-                    break;
-                }
-            }
+            socketList.remove(this.socket);
 
             // chiude la connessione
+            toClient.close();
+            fromClient.close();
             this.socket.close();
-            System.out.println("Client disconnesso");
-
         } catch (IOException e) {
             System.err.println("Errore durante operazione I/O");
             e.printStackTrace();
@@ -161,7 +171,7 @@ public class ClientHandlerTS implements Runnable {
                 output.println("Avviata Sessione di Lettura per il file " + filename);
                 output.println(testo);
                 output.flush();
-                output.println("Codice 101"); // Possibilmente da modificare
+                output.println(this.IDENTIFIER + "101");
                 output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
                 while (!input.nextLine().equalsIgnoreCase(":close")) {
                     // do nothing...
@@ -185,7 +195,7 @@ public class ClientHandlerTS implements Runnable {
         } catch (Exception e) {
             // System.out.println("Errore nella Lettura di un file: " + e.getMessage());
             output.println("Il file " + filename + " non esiste!");
-            output.println("Codice 101"); // unlock del terminale in scrittura.
+            output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
         }
     }
 

@@ -48,22 +48,17 @@ public class ServerTS {
                     + "client attualmente connessi in scrittura\n"
                     + "- \"quit\": disconnette eventuali client connessi e chiude il server");
 
-            DirectoryManager dirManager = new DirectoryManager(directory); // gestore dei file di testo con tutti i
-                                                                           // metodi
-
+            DirectoryManager dirManager = new DirectoryManager(directory);
             ArrayList<Socket> socketList = new ArrayList<>();
-            Thread serverHandlerThread = new Thread(new ServerHandlerTS(listener, socketList, dirManager));// passa il ServerSocket
-                                                                                               // da chiudere e la lista
-                                                                                               // di socket da chiudere
-            serverHandlerThread.start();// gestira' i comandi server di info e quit
+
+            Thread serverHandlerThread = new Thread(new ServerHandlerTS(listener, socketList, dirManager));
+            serverHandlerThread.start();
 
             // Ciclo di vita del thread principale del server, non fa altro che accettare
             // nuove connessioni
+            System.out.println("In ascolto...");
             while (true) {
-                System.out.println("In ascolto...");
-                Socket s = listener.accept(); // Connessione al client con creazione apposito Socket, puo' sollevare
-                                              // IOException
-                System.out.println("Client connesso");
+                Socket s = listener.accept(); // Puo' sollevare IOException
 
                 // Lasica la gestione a un thread dedicato
                 Thread clientHandlerThread = new Thread(new ClientHandlerTS(s, socketList, dirManager));

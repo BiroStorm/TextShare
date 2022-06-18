@@ -18,12 +18,9 @@ public class Sender implements Runnable {
         try {
             Scanner fromConsole = new Scanner(System.in);
             PrintWriter toOther = new PrintWriter(s.getOutputStream(), true);
-            while (true) {
+            while (!Thread.interrupted()) {
                 String message = fromConsole.nextLine();
-                if (Thread.interrupted()) {
-                    toOther.println("quit");
-                    break;
-                }
+
                 // questo blocco deve essere messo in un Syncronized perchè deve essere eseguito
                 // in maniera "atomica" rispetto al Receiver, che dovrà fare un Notify() SOLO
                 // dopo che questo thread sarà stato messo in wait.
@@ -33,15 +30,14 @@ public class Sender implements Runnable {
                     toOther.println(message);
                     if (message.startsWith("read ")) {
                         Thread.currentThread().wait();
-                    } else if (message.equals("quit")) {
-                        break;
                     }
                 }
             }
 
             // Prima di terminare
             fromConsole.close();
-            System.out.println("Closed (sender)");
+            toOther.close();
+            System.out.println("Sender chiuso.");
 
         } catch (IOException e) {
             e.printStackTrace();
