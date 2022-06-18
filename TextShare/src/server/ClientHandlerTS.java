@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * ClientHandler implementa la gestione della connessione con il suo client, '
@@ -45,38 +46,7 @@ public class ClientHandlerTS implements Runnable {
                 String filename = splitcom.length > 1 ? splitcom[1] : "";
 
                 if (commandType.equalsIgnoreCase("list")) {
-                	
-                	File[] filesList = dirManager.getDirectory().listFiles();
-                	if (filesList.length == 0) {
-                		toClient.println("Non c'� nessun file");
-                	} else {
-                		DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
-                		toClient.println("Lista dei file presenti sul server:\n");
-                		for (File f : filesList) {
-                			
-                			toClient.println("Nome File: " + f.getName()
-                			+ "\nUltima modifica: " + sdf.format(f.lastModified()));
-                			
-                			// se se il file e' in HashMap conto il numero di utenti in lettura/scrittura
-                			// altrimenti so che nessun utente pu� essere in lettura/scrittura per quel file.
-                			if (dirManager.getCHM().containsKey(f.getPath())) {
-                				FileHandler fh = dirManager.getCHM().get(f.getPath());
-                    			
-                    			int totReadingWritingUsers;
-                    			if (fh.getUserIsWriting())
-                    				totReadingWritingUsers = 1;
-                    			else
-                    				totReadingWritingUsers = fh.getReadingUsers();
-                    			
-                    			toClient.println("Numero utenti che stanno attualmente leggendo o modificando il file: "
-                    			+ totReadingWritingUsers + "\n");
-                			} else {
-                				toClient.println("Numero utenti che stanno attualmente leggendo o modificando il file: 0\n");
-                			}
-                			
-                		}
-                	}
-                	
+                    commandList(toClient);
                 } else if (commandType.equalsIgnoreCase("create")) {
                     // Nota: Bisogna gestire la concorrenza sull'inserimento e creazione del file.
                     // dati 2 thread, se entrambi procedono con la creazione di un file con lo
@@ -101,11 +71,11 @@ public class ClientHandlerTS implements Runnable {
 
                 } else if (commandType.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
-                	// TODO: incremento contatori scrittura
+                    // TODO: incremento contatori scrittura
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
-                	// TODO: implementare comando rename
-                	
+                    // TODO: implementare comando rename
+
                 } else if (commandType.equalsIgnoreCase("delete")) {
            
                     int deleted = dirManager.delete(filename);
@@ -154,30 +124,54 @@ public class ClientHandlerTS implements Runnable {
 
     }
 
+    private void commandList(PrintWriter toClient) {
+
+        File[] filesList = dirManager.getDirectory().listFiles();
+        if (filesList.length == 0) {
+            toClient.println("Non c'è nessun file");
+        } else {
+            DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
+            toClient.println("Lista dei file presenti sul server:");
+            toClient.println("Nome File \t Ultima Modifica \t Scrittura \t Lettura");
+            ConcurrentHashMap<String, FileHandler> CHM = dirManager.getCHM();
+            for (File f : filesList) {
+                if(f.isDirectory()) continue;
+                toClient.print(f.getName() + "\t" + sdf.format(f.lastModified()) + "\t");
+                // se se il file è in HashMap conto il numero di utenti in lettura/scrittura
+                // altrimenti non esistono utenti in lettura/scrittura per quel file.
+                if (CHM.containsKey(f.getPath())) {
+                    FileHandler fh = CHM.get(f.getPath());
+
+                    toClient.printf("\t%d \t %d\n", fh.getReadingUsers(), fh.getisUserWriting() ? 1 : 0);
+                } else {
+                    toClient.println("\t0 \t 0");
+                }
+
+            }
+        }
+
+    }
+
     private void gestioneLettura(String filename, Scanner input, PrintWriter output) {
         try {
             FileHandler fh = dirManager.read(filename);
             output.println("Attesa inizio Sessione di Scrittura...");
-            String testo = fh.OpenReadSession();
-            // incrementa il counter del numero di client in lettura su questo file
-            fh.increaseReadingUsersCounter();
             try {
-            output.println("Avviata Sessione di Lettura per il file " + filename);
-
-            output.println(testo);
-            output.flush();
-            output.println("Codice 101"); // Possibilmente da modificare
-            output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
-            while (!input.nextLine().equalsIgnoreCase(":close")) {
-                // do nothing...
+                String testo = fh.OpenReadSession();
+                output.println("Avviata Sessione di Lettura per il file " + filename);
+                output.println(testo);
+                output.flush();
+                output.println("Codice 101"); // Possibilmente da modificare
                 output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
-            }
-            fh.CloseReadSession();
-            output.println("Sessione di scrittura Terminata.");
+                while (!input.nextLine().equalsIgnoreCase(":close")) {
+                    // do nothing...
+                    output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
+                }
             } finally {
-            	// Qualsiasi cosa accada dopo l'incremento (un crash del client)
-            	// comunque decrementa il counter del numero di client in lettura su questo file
-                fh.decreaseReadingUsersCounter();
+                // Qualsiasi cosa accada dopo l'incremento (un crash del client)
+                // comunque decrementa il counter del numero di client in lettura su questo file
+                fh.CloseReadSession();
+                output.println("Sessione di scrittura Terminata.");
             }
 
             /*
@@ -191,6 +185,7 @@ public class ClientHandlerTS implements Runnable {
         } catch (Exception e) {
             // System.out.println("Errore nella Lettura di un file: " + e.getMessage());
             output.println("Il file " + filename + " non esiste!");
+            output.println("Codice 101"); // unlock del terminale in scrittura.
         }
     }
 

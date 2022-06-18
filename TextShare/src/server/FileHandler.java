@@ -7,6 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -28,19 +29,12 @@ public class FileHandler {
     private File file;
     private ReentrantReadWriteLock lock;
     private BufferedWriter bw;
-    
-    // contatori degli utenti in lettura o scrittura (utili per il comando info del server e list del client)
-    public int readingUsers = 0;
-    private boolean UserIsWriting = false;
 
-    public int getReadingUsers() {
-    	return this.readingUsers;
-    }
-    
-    public boolean getUserIsWriting() {
-    	return this.UserIsWriting;
-    }
-    
+    // contatori degli utenti in lettura o scrittura
+    // (utili per il comando info del server e list del client)
+    private AtomicInteger readingUsers;
+    private boolean isUserWriting;
+
     public FileHandler(String filePath) throws Exception {
         // TODO: Il controllo dell'esistenza del File deve essere spostato su
         // DirectoryManager.
@@ -54,7 +48,8 @@ public class FileHandler {
         }
         this.file = f;
         this.lock = new ReentrantReadWriteLock();
-
+        this.readingUsers = new AtomicInteger(0);
+        this.isUserWriting = false;
     }
 
     /**
@@ -67,7 +62,8 @@ public class FileHandler {
     public String OpenReadSession() throws IOException, FileNotFoundException {
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
-        // Sessione di Lettura:
+        // Inizio Sessione di Lettura
+        this.readingUsers.incrementAndGet();
         BufferedReader br = new BufferedReader(new FileReader(file));
 
         String testo = "";
@@ -95,6 +91,7 @@ public class FileHandler {
      */
     public void CloseReadSession() {
         this.lock.readLock().unlock();
+        this.readingUsers.decrementAndGet();
     }
 
     /**
@@ -107,6 +104,8 @@ public class FileHandler {
     public void OpenWriteSession() throws IOException, FileNotFoundException {
         // Prendiamo il Lock in scrittura.
         this.lock.writeLock().lock();
+        // le operazioni di assegnazioni sono atomiche (see Javadocs)
+        this.isUserWriting = true;
         this.bw = new BufferedWriter(new FileWriter(file));
     }
 
@@ -139,26 +138,20 @@ public class FileHandler {
      * @throws IOException
      */
     public void CloseWriteSession() throws IOException {
-        try {
-        	this.lock.writeLock().unlock();
-        	// è sempre buona norma chiudere il buffered quando si finisce.
-        	bw.close();
-        } finally {
-        	this.UserIsWriting = false;
-        }
+
+        this.lock.writeLock().unlock();
+        // le operazioni di assegnazioni sono atomiche (see Javadocs)
+        this.isUserWriting = false;
+        // è sempre buona norma chiudere il buffered quando si finisce.
+        bw.close();
     }
- 
-    // incrementa il contatore dei lettori assicurandosi l'assenza di interferenze
-    public synchronized void increaseReadingUsersCounter() {
-    	//FIXME: dal secondo thread in poi che invoca questo metodo, se non � a 0, non si incrementa.
-    	this.readingUsers += 1;
-    	System.out.println(this.readingUsers);
+
+    public int getReadingUsers() {
+        return this.readingUsers.get();
     }
-    // decrementa il contatore dei lettori assicurandosi l'assenza di interferenze
-    public synchronized void decreaseReadingUsersCounter() {
-    	//FIXME: dal secondo thread in poi che invoca questo metodo, non si decrementa.
-    	this.readingUsers -= 1;
-    	System.out.println(this.readingUsers);
+
+    public boolean getisUserWriting() {
+        return this.isUserWriting;
     }
-    
+
 }
