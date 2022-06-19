@@ -199,4 +199,35 @@ public class ClientHandlerTS implements Runnable {
         }
     }
 
+
+
+    //metodo di gestione edit provvisorio
+    private void editSession(String filename, Scanner input, PrintWriter output) {
+        try {
+            FileHandler fh = dirManager.edit(filename);
+            output.println("Attesa inizio Sessione di Scrittura...");
+            try{
+                fh.OpenWriteSession();
+                output.println("Avviata Sessione di Scrittura per il file " + filename);
+                //serve per chiudere la sessione di scrittura sul file, se l'utente non inserisce close il writer continua a scrivere su file il testo che l'utente digita
+                output.println(this.IDENTIFIER + "101");
+                output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
+                while (!input.nextLine().equalsIgnoreCase(":close")) {
+                    String linea = input.nextLine(); 
+                    fh.Write(linea);
+                }
+            }finally{
+                fh.CloseWriteSession();
+                output.println("Sessione di scrittura Terminata.");
+            }
+
+        }catch(Exception e){
+            output.println("Il file " + filename + " non esiste!");
+            output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
+        }
+    }
+    //metodo di gestione edit provvisorio
+
+
+
 }
