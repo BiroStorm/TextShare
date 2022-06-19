@@ -50,6 +50,22 @@ public class DirectoryManager {
         }
         return false;
     }
+    
+    public boolean rename(String filename, String[] splittedCom) throws FileNotFoundException {
+    	
+    	File oldName = new File(directory.getPath(), filename);
+    	File newName = new File(directory.getPath(), splittedCom[2]);
+    	
+    	boolean renamed = oldName.renameTo(newName);
+    	if (renamed==true) {
+    		concurrentHM.remove(oldName.getPath());
+    		this.InsertIntoCHM(newName.getPath());
+    		return true;
+    	} else {
+    		return false;
+    	}
+    	
+    }
 
     public FileHandler edit(String fileName) throws Exception {
         // TODO: Modifica e scrittura del file

@@ -89,8 +89,13 @@ public class ClientHandlerTS implements Runnable {
                     this.editSession(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
-                    // TODO: implementare comando rename
-                    // usare splittedCom[2] come stringa per il nuovo nome da assegnare al file
+
+                	boolean renamed = dirManager.rename(fileName, splittedCom);
+                    if (renamed == true) {
+                        toClient.println("Il file è stato rinominato correttamente");
+                    } else {
+                        toClient.println("Non è stato possibile rinominare il file");
+                    }
 
                 } else if (commandType.equalsIgnoreCase("delete")) {
                     try {
