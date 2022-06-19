@@ -86,6 +86,7 @@ public class ClientHandlerTS implements Runnable {
                 } else if (commandType.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
                     // TODO: incremento contatori scrittura
+                    this.editSession(filename, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
                     // TODO: implementare comando rename
