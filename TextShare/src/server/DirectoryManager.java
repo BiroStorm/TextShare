@@ -56,13 +56,25 @@ public class DirectoryManager {
 		}
 	}
 
-    public FileHandler edit(String fileName) {
+    public FileHandler edit(String fileName) throws Exception{
         // TODO: Modifica e scrittura del file
         // Controlla che sia presente in concurrentHM
         // Se non è presente allora controlla se il file esiste
         // Se esiste allora crea nuova istanza di FileHandler
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" +"fileName");
+        if(fh == null){
+            // controlla se il file esiste
+            File f = new File(directory.getPath(), fileName);
+            if (!f.exists()) {
+                // non è stato caricato ancora sul CHM, quindi lo carichiamo
+                fh = this.InsertIntoCHM(directory.getPath() + "\\" + fileName);
+            } else {
+                //il file non esiste
+                return null;
+            }
 
-        return null;
+        }
+        return fh;
     }
 
     public FileHandler read(String filename) throws Exception {
