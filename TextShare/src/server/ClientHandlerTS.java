@@ -55,9 +55,10 @@ public class ClientHandlerTS implements Runnable {
             // Ciclo di vita
             while (true) {
                 String command = fromClient.nextLine(); // Lettura della richiesta del client
-                String[] splitcom = command.split(" ");
-                String commandType = splitcom[0];
-                String filename = splitcom.length > 1 ? splitcom[1] : "";
+                String[] splittedCom = command.split(" ", 3);
+                String commandType = splittedCom[0];
+                String fileName = splittedCom.length > 1 ? splittedCom[1] : "";
+                String newFileName = splittedCom.length > 2 ? splittedCom[2] : "";
 
                 if (commandType.equalsIgnoreCase("list")) {
                     commandList(toClient);
@@ -68,7 +69,7 @@ public class ClientHandlerTS implements Runnable {
                     // anche se, il problema prodotto non è affatto un problema...
 
                     try {
-                        boolean created = dirManager.createNewFile(filename);
+                        boolean created = dirManager.createNewFile(fileName);
                         if (created == true) {
                             toClient.println("File creato correttamente");
                         } else {
@@ -81,19 +82,19 @@ public class ClientHandlerTS implements Runnable {
 
                 } else if (commandType.equalsIgnoreCase("read")) {
 
-                    this.gestioneLettura(filename, fromClient, toClient);
+                    this.gestioneLettura(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("edit")) {
                     // TODO: Modalità Scrittura
                     // TODO: incremento contatori scrittura
-                    this.editSession(filename, fromClient, toClient);
+                    this.editSession(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
                     // TODO: implementare comando rename
 
                 } else if (commandType.equalsIgnoreCase("delete")) {
            
-                    int deleted = dirManager.delete(filename);
+                    int deleted = dirManager.delete(fileName);
                     
                     if (deleted == 0) {
                         toClient.println("Non è stato possibile eliminare il file: file non esistente");
