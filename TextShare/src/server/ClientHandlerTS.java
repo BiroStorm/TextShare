@@ -1,6 +1,7 @@
 package server;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -74,8 +75,8 @@ public class ClientHandlerTS implements Runnable {
                         } else {
                             toClient.println("File già esistente: il file non è stato creato");
                         }
-                    } catch (Exception e) {
-                        System.out.println("Errore nella Creazione di un file: " + e.getMessage());
+                    } catch (IOException e) {
+                        System.out.println("Errore nella Creazione del file: " + e.getMessage());
                         e.printStackTrace();
                     }
 
@@ -84,25 +85,24 @@ public class ClientHandlerTS implements Runnable {
                     this.gestioneLettura(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("edit")) {
-                	
+
                     this.editSession(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
                     // TODO: implementare comando rename
-                	// usare splittedCom[2] come stringa per il nuovo nome da assegnare al file
+                    // usare splittedCom[2] come stringa per il nuovo nome da assegnare al file
 
                 } else if (commandType.equalsIgnoreCase("delete")) {
-           
-                    int deleted = dirManager.delete(fileName);
-                    
-                    if (deleted == 0) {
-                        toClient.println("Non è stato possibile eliminare il file: file non esistente");
-                    } else if (deleted == 1) {
-                        toClient.println("Non è stato possibile eliminare il file");
-                    } else {
-                    	toClient.println("Il file è stato eliminato correttamente");
-					}
-                    
+                    try {
+                        if (dirManager.delete(fileName)) {
+                            toClient.println("Il file è stato eliminato correttamente.");
+                        } else {
+                            toClient.println("Per qualche motivo, non è stato possibile eliminare il file.");
+                        }
+                    } catch (FileNotFoundException fe) {
+                        toClient.println(fe.getMessage());
+                    }
+
                 } else if (commandType.equalsIgnoreCase("quit")) {
                     // Se il client chiude la connessione, fai lo stesso lato server
                     toClient.println(this.IDENTIFIER + "503");
@@ -146,7 +146,8 @@ public class ClientHandlerTS implements Runnable {
             toClient.println("Nome File \t Ultima Modifica \t Scrittura \t Lettura");
             ConcurrentHashMap<String, FileHandler> CHM = dirManager.getCHM();
             for (File f : filesList) {
-                if(f.isDirectory()) continue;
+                if (f.isDirectory())
+                    continue;
                 toClient.print(f.getName() + "\t" + sdf.format(f.lastModified()) + "\t");
                 // se se il file è in HashMap conto il numero di utenti in lettura/scrittura
                 // altrimenti non esistono utenti in lettura/scrittura per quel file.
@@ -193,42 +194,43 @@ public class ClientHandlerTS implements Runnable {
              * nuovo metodo in FileHandler, come ad esempio Read() e farlo simile
              * alla procedura di Write.
              */
-        } catch (Exception e) {
+        } catch (FileNotFoundException e) {
             // System.out.println("Errore nella Lettura di un file: " + e.getMessage());
-            output.println("Il file " + filename + " non esiste!");
+            output.println("Errore: " + e.getMessage());
             output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
+        } catch (IOException e) {
+            output.println("Errore IOException: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
-
-
-    //metodo di gestione edit provvisorio
+    // metodo di gestione edit provvisorio
     private void editSession(String filename, Scanner input, PrintWriter output) {
         try {
             FileHandler fh = dirManager.edit(filename);
             output.println("Attesa inizio Sessione di Scrittura...");
-            try{
+            try {
                 fh.OpenWriteSession();
                 output.println("Avviata Sessione di Scrittura per il file " + filename);
-                //serve per chiudere la sessione di scrittura sul file, se l'utente non inserisce close il writer continua a scrivere su file il testo che l'utente digita
+                // serve per chiudere la sessione di scrittura sul file, se l'utente non
+                // inserisce close il writer continua a scrivere su file il testo che l'utente
+                // digita
                 output.println(this.IDENTIFIER + "101");
                 output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
                 while (!input.nextLine().equalsIgnoreCase(":close")) {
-                    String linea = input.nextLine(); 
+                    String linea = input.nextLine();
                     fh.Write(linea);
                 }
-            }finally{
+            } finally {
                 fh.CloseWriteSession();
                 output.println("Sessione di scrittura Terminata.");
             }
 
-        }catch(Exception e){
+        } catch (Exception e) {
             output.println("Il file " + filename + " non esiste!");
             output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
         }
     }
-    //metodo di gestione edit provvisorio
-
-
+    // metodo di gestione edit provvisorio
 
 }

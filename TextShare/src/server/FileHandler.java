@@ -35,16 +35,12 @@ public class FileHandler {
     private AtomicInteger readingUsers;
     private boolean isUserWriting;
 
-    public FileHandler(String filePath) throws Exception {
-        // TODO: Il controllo dell'esistenza del File deve essere spostato su
-        // DirectoryManager.
+    public FileHandler(String filePath) throws FileNotFoundException {
         File f = new File(filePath);
 
         if (!f.exists() || f.isDirectory()) {
             // Se è una directory o il file non esiste lanciamo l'eccezione.
-
-            // Nota: Meglio usare una custom Exception, così da non renderla così generica.
-            throw new Exception("Il file non esiste o è una directory! File: " + filePath);
+            throw new FileNotFoundException("Il file non esiste o è una directory! File: " + filePath);
         }
         this.file = f;
         this.lock = new ReentrantReadWriteLock();
@@ -59,7 +55,7 @@ public class FileHandler {
      * @throws IOException
      * @see {@link #CloseReadSession()}
      */
-    public String OpenReadSession() throws IOException, FileNotFoundException {
+    public String OpenReadSession() throws IOException, FileNotFoundException{
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
         // Inizio Sessione di Lettura

@@ -1,6 +1,8 @@
 package server;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
@@ -16,16 +18,16 @@ public class DirectoryManager {
         this.directory = directory;
         this.concurrentHM = new ConcurrentHashMap<String, FileHandler>();
     }
-    
+
     public File getDirectory() {
-    	return this.directory;
-    }
-    
-    public ConcurrentHashMap<String, FileHandler> getCHM() {
-    	return this.concurrentHM;
+        return this.directory;
     }
 
-    public boolean createNewFile(String Filename) throws Exception {
+    public ConcurrentHashMap<String, FileHandler> getCHM() {
+        return this.concurrentHM;
+    }
+
+    public boolean createNewFile(String Filename) throws IOException{
 
         File f = new File(directory.getPath(), Filename);
         // il metodo createNewFile controlla già di per se se il file esiste o meno.
@@ -38,38 +40,31 @@ public class DirectoryManager {
 
     }
 
-    public int delete(String filename) {
-		File f = new File(directory.getPath(), filename);
-    	
-    	if (!f.exists()) {
-    		return 0;
-		}  else {
-			if (f.delete()) {
-				if (concurrentHM.containsKey(f.getPath())) {
-					concurrentHM.remove(f.getPath());
-				}
+    public boolean delete(String filename) throws FileNotFoundException {
+        File f = new File(directory.getPath(), filename);
+        if (!f.exists())
+            throw new FileNotFoundException("Il File " + filename + " non esiste!");
+        if (f.delete()) {
+            concurrentHM.remove(f.getPath());
+            return true;
+        }
+        return false;
+    }
 
-				return 2;
-			} else {
-				return 1;
-			}
-		}
-	}
-
-    public FileHandler edit(String fileName) throws Exception{
+    public FileHandler edit(String fileName) throws Exception {
         // TODO: Modifica e scrittura del file
         // Controlla che sia presente in concurrentHM
         // Se non è presente allora controlla se il file esiste
         // Se esiste allora crea nuova istanza di FileHandler
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" +"fileName");
-        if(fh == null){
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + "fileName");
+        if (fh == null) {
             // controlla se il file esiste
             File f = new File(directory.getPath(), fileName);
             if (!f.exists()) {
                 // non è stato caricato ancora sul CHM, quindi lo carichiamo
                 fh = this.InsertIntoCHM(directory.getPath() + "\\" + fileName);
             } else {
-                //il file non esiste
+                // il file non esiste
                 return null;
             }
 
@@ -77,14 +72,10 @@ public class DirectoryManager {
         return fh;
     }
 
-    public FileHandler read(String filename) throws Exception {
-        // TODO: Lettura del file
-        // Controlla che sia presente in concurrentHM
-        // Se non è presente allora controlla se il file esiste
-        // Se esiste allora crea nuova istanza di FileHandler
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" +"filename");
-        
-        if(fh == null){
+    public FileHandler read(String filename) throws FileNotFoundException {
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + "filename");
+
+        if (fh == null) {
             // non è stato caricato ancora sul CHM, quindi lo carichiamo
             fh = this.InsertIntoCHM(directory.getPath() + "\\" + filename);
         }
@@ -92,7 +83,7 @@ public class DirectoryManager {
 
     }
 
-    private FileHandler InsertIntoCHM(String filePath) throws Exception {
+    private FileHandler InsertIntoCHM(String filePath) throws FileNotFoundException {
         FileHandler fh = new FileHandler(filePath);
         concurrentHM.put(filePath, fh);
         return fh;
