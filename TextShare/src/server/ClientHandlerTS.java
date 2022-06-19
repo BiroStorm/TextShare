@@ -55,10 +55,9 @@ public class ClientHandlerTS implements Runnable {
             // Ciclo di vita
             while (true) {
                 String command = fromClient.nextLine(); // Lettura della richiesta del client
-                String[] splittedCom = command.split(" ", 3);
+                String[] splittedCom = command.split(" ");
                 String commandType = splittedCom[0];
                 String fileName = splittedCom.length > 1 ? splittedCom[1] : "";
-                String newFileName = splittedCom.length > 2 ? splittedCom[2] : "";
 
                 if (commandType.equalsIgnoreCase("list")) {
                     commandList(toClient);
@@ -85,12 +84,12 @@ public class ClientHandlerTS implements Runnable {
                     this.gestioneLettura(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("edit")) {
-                    // TODO: Modalità Scrittura
-                    // TODO: incremento contatori scrittura
+                	
                     this.editSession(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
                     // TODO: implementare comando rename
+                	// usare splittedCom[2] come stringa per il nuovo nome da assegnare al file
 
                 } else if (commandType.equalsIgnoreCase("delete")) {
            
