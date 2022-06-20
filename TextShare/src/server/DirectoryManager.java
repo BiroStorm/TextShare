@@ -27,7 +27,7 @@ public class DirectoryManager {
         return this.concurrentHM;
     }
 
-    public boolean createNewFile(String Filename) throws IOException{
+    public boolean createNewFile(String Filename) throws IOException {
 
         File f = new File(directory.getPath(), Filename);
         // il metodo createNewFile controlla già di per se se il file esiste o meno.
@@ -44,59 +44,43 @@ public class DirectoryManager {
         File f = new File(directory.getPath(), filename);
         if (!f.exists())
             throw new FileNotFoundException("Il File " + filename + " non esiste!");
-        if (f.delete()) {
-            concurrentHM.remove(f.getPath());
-            return true;
-        }
-        return false;
-    }
-    
-    public boolean rename(String filename, String[] splittedCom) throws FileNotFoundException {
-    	
-    	File oldName = new File(directory.getPath(), filename);
-    	File newName = new File(directory.getPath(), splittedCom[2]);
-    	
-    	boolean renamed = oldName.renameTo(newName);
-    	if (renamed==true) {
-    		concurrentHM.remove(oldName.getPath());
-    		this.InsertIntoCHM(newName.getPath());
-    		return true;
-    	} else {
-    		return false;
-    	}
-    	
-    }
-
-    public FileHandler edit(String fileName) throws Exception {
-        // TODO: Modifica e scrittura del file
-        // Controlla che sia presente in concurrentHM
-        // Se non è presente allora controlla se il file esiste
-        // Se esiste allora crea nuova istanza di FileHandler
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + "fileName");
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
         if (fh == null) {
-            // controlla se il file esiste
-            File f = new File(directory.getPath(), fileName);
-            if (!f.exists()) {
-                // non è stato caricato ancora sul CHM, quindi lo carichiamo
-                fh = this.InsertIntoCHM(directory.getPath() + "\\" + fileName);
-            } else {
-                // il file non esiste
-                return null;
-            }
-
+            // si può cancellare in sicurezza:
+            if (f.delete())
+                return true;
+            return false;
         }
-        return fh;
+        // Esisteva il FileHandler nel CHM, bisogna controllare i lettori e scrittori:
+        if (fh.getisUserWriting() || fh.getReadingUsers() > 0)
+            return false;
+        concurrentHM.remove(f.getPath());
+        return true;
+
     }
 
-    public FileHandler read(String filename) throws FileNotFoundException {
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + "filename");
+    public boolean rename(String filename, String[] splittedCom) throws FileNotFoundException {
 
+        File oldName = new File(directory.getPath(), filename);
+        File newName = new File(directory.getPath(), splittedCom[2]);
+
+        boolean renamed = oldName.renameTo(newName);
+        if (renamed == true) {
+            concurrentHM.remove(oldName.getPath());
+            this.InsertIntoCHM(newName.getPath());
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public FileHandler getFileHandler(String filename) throws FileNotFoundException {
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
         if (fh == null) {
             // non è stato caricato ancora sul CHM, quindi lo carichiamo
             fh = this.InsertIntoCHM(directory.getPath() + "\\" + filename);
         }
         return fh;
-
     }
 
     private FileHandler InsertIntoCHM(String filePath) throws FileNotFoundException {

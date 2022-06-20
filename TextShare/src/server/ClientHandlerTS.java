@@ -90,7 +90,7 @@ public class ClientHandlerTS implements Runnable {
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
 
-                	boolean renamed = dirManager.rename(fileName, splittedCom);
+                    boolean renamed = dirManager.rename(fileName, splittedCom);
                     if (renamed == true) {
                         toClient.println("Il file è stato rinominato correttamente");
                     } else {
@@ -102,7 +102,7 @@ public class ClientHandlerTS implements Runnable {
                         if (dirManager.delete(fileName)) {
                             toClient.println("Il file è stato eliminato correttamente.");
                         } else {
-                            toClient.println("Per qualche motivo, non è stato possibile eliminare il file.");
+                            toClient.println("Non è stato possibile eliminare il file.\nQualcuno potrebbe star leggendo o scrivendo il file!");
                         }
                     } catch (FileNotFoundException fe) {
                         toClient.println(fe.getMessage());
@@ -171,7 +171,7 @@ public class ClientHandlerTS implements Runnable {
 
     private void gestioneLettura(String filename, Scanner input, PrintWriter output) {
         try {
-            FileHandler fh = dirManager.read(filename);
+            FileHandler fh = dirManager.getFileHandler(filename);
             output.println("Attesa inizio Sessione di Scrittura...");
             try {
                 String testo = fh.OpenReadSession();
@@ -179,10 +179,10 @@ public class ClientHandlerTS implements Runnable {
                 output.println(testo);
                 output.flush();
                 output.println(this.IDENTIFIER + "101");
-                output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
+                output.println("\033[3mPer uscire dalla modalità lettura inviare :close\033[0m");
                 while (!input.nextLine().equalsIgnoreCase(":close")) {
                     // do nothing...
-                    output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
+                    output.println("\033[3mPer uscire dalla modalità lettura inviare :close\033[0m");
                 }
             } finally {
                 // Qualsiasi cosa accada dopo l'incremento (un crash del client)
@@ -212,19 +212,27 @@ public class ClientHandlerTS implements Runnable {
     // metodo di gestione edit provvisorio
     private void editSession(String filename, Scanner input, PrintWriter output) {
         try {
-            FileHandler fh = dirManager.edit(filename);
+            FileHandler fh = dirManager.getFileHandler(filename);
             output.println("Attesa inizio Sessione di Scrittura...");
             try {
                 fh.OpenWriteSession();
                 output.println("Avviata Sessione di Scrittura per il file " + filename);
-                // serve per chiudere la sessione di scrittura sul file, se l'utente non
-                // inserisce close il writer continua a scrivere su file il testo che l'utente
-                // digita
-                output.println(this.IDENTIFIER + "101");
                 output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
-                while (!input.nextLine().equalsIgnoreCase(":close")) {
+                output.println("\033[3mPer eliminare l'ultima riga del file inviare :backspace\033[0m");
+
+                while (true) {
                     String linea = input.nextLine();
-                    fh.Write(linea);
+                    // non si usa switch perchè è necessario fare Break;
+                    if (linea.equalsIgnoreCase(":backspace")) {
+                        // Rimuove l'ultima riga del file:
+
+                    } else if (linea.equalsIgnoreCase(":close")) {
+                        break;
+                    }else{
+                        // Nuova riga su File
+                        fh.Write(linea);
+                    }
+                    
                 }
             } finally {
                 fh.CloseWriteSession();

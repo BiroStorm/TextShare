@@ -102,7 +102,7 @@ public class FileHandler {
         this.lock.writeLock().lock();
         // le operazioni di assegnazioni sono atomiche (see Javadocs)
         this.isUserWriting = true;
-        this.bw = new BufferedWriter(new FileWriter(file));
+        this.bw = new BufferedWriter(new FileWriter(file, true));
     }
 
     /**
@@ -118,13 +118,20 @@ public class FileHandler {
             if (line.isEmpty()) {
                 this.bw.newLine();
             } else {
-                bw.write(line);
+                bw.write(line + "\n");
             }
             this.bw.flush();
         } else {
             // Se arriva qua significa che un Thread ha provato a scrivere
             // Senza avere prima acquisito il Lock in scrittura!
         }
+    }
+
+    public void deleteLastRow() throws IOException {
+
+        // TODO Implementare il metodo che elimina l'ultima riga del file.
+        // Bisogna controllare che il Thread abbia il Lock in scrittura
+        // non è serve che ritorni qualcosa (che il file sia vuoto non ci interessa)
     }
 
     /**
@@ -135,9 +142,9 @@ public class FileHandler {
      */
     public void CloseWriteSession() throws IOException {
 
-        this.lock.writeLock().unlock();
         // le operazioni di assegnazioni sono atomiche (see Javadocs)
         this.isUserWriting = false;
+        this.lock.writeLock().unlock();
         // è sempre buona norma chiudere il buffered quando si finisce.
         bw.close();
     }
@@ -148,6 +155,10 @@ public class FileHandler {
 
     public boolean getisUserWriting() {
         return this.isUserWriting;
+    }
+
+    public File getFile(){
+        return this.file;
     }
 
 }
