@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.io.PrintWriter;
 
 /**
  * Gestisce il singolo file dato il path in input (senza ".txt")
@@ -132,6 +133,29 @@ public class FileHandler {
         // TODO Implementare il metodo che elimina l'ultima riga del file.
         // Bisogna controllare che il Thread abbia il Lock in scrittura
         // non è serve che ritorni qualcosa (che il file sia vuoto non ci interessa)
+        if (this.lock.writeLock().isHeldByCurrentThread()) {
+           //leggo il file
+           BufferedReader br = new BufferedReader(new FileReader(file));
+           String testo = "";
+            while (br.ready()) {
+                testo += br.readLine() + "\n";
+            }
+            br.close();
+            //divido il testo in righe
+            String[] righe = testo.split("\\R");
+            //svuoto il file e riscrivo tutte le righe tranne l'ultima
+            PrintWriter pw = new PrintWriter(file);
+            pw.close();
+            for(int i=0; i<righe.length-1; i++){
+                bw.write(righe[i] + "\n");
+            }
+            this.bw.flush();
+
+        } else {
+            // Se arriva qua significa che un Thread ha provato a scrivere
+            // Senza avere prima acquisito il Lock in scrittura!
+        }
+
     }
 
     /**
