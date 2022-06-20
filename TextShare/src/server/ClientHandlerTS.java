@@ -225,7 +225,7 @@ public class ClientHandlerTS implements Runnable {
                     // non si usa switch perchè è necessario fare Break;
                     if (linea.equalsIgnoreCase(":backspace")) {
                         // Rimuove l'ultima riga del file:
-
+                        fh.deleteLastRow();
                     } else if (linea.equalsIgnoreCase(":close")) {
                         break;
                     }else{
