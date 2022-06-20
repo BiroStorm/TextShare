@@ -56,7 +56,7 @@ public class FileHandler {
      * @throws IOException
      * @see {@link #CloseReadSession()}
      */
-    public String OpenReadSession() throws IOException, FileNotFoundException{
+    public String OpenReadSession() throws IOException, FileNotFoundException {
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
         // Inizio Sessione di Lettura
@@ -125,37 +125,33 @@ public class FileHandler {
         } else {
             // Se arriva qua significa che un Thread ha provato a scrivere
             // Senza avere prima acquisito il Lock in scrittura!
+            throw new IOException("Vietato modificare il file se non si ha il Lock in scrittura!");
         }
     }
 
+    /**
+     * Elimina l'ultima riga del file.
+     * 
+     * @throws IOException
+     */
     public void deleteLastRow() throws IOException {
-
-        // TODO Implementare il metodo che elimina l'ultima riga del file.
-        // Bisogna controllare che il Thread abbia il Lock in scrittura
-        // non è serve che ritorni qualcosa (che il file sia vuoto non ci interessa)
         if (this.lock.writeLock().isHeldByCurrentThread()) {
-           //leggo il file
-           BufferedReader br = new BufferedReader(new FileReader(file));
-           String testo = "";
+            this.bw.close();
+            // leggo il file
+            BufferedReader br = new BufferedReader(new FileReader(file));
+            String testo = "";
+            String lastrow = "";
             while (br.ready()) {
-                testo += br.readLine() + "\n";
+                testo += lastrow;
+                lastrow = br.readLine() + "\n";
             }
             br.close();
-            //divido il testo in righe
-            String[] righe = testo.split("\\R");
-            //svuoto il file e riscrivo tutte le righe tranne l'ultima
-            PrintWriter pw = new PrintWriter(file);
-            pw.close();
-            for(int i=0; i<righe.length-1; i++){
-                bw.write(righe[i] + "\n");
-            }
+            this.bw = new BufferedWriter(new FileWriter(file));
+            this.bw.write(testo);
             this.bw.flush();
-
         } else {
-            // Se arriva qua significa che un Thread ha provato a scrivere
-            // Senza avere prima acquisito il Lock in scrittura!
+            throw new IOException("Vietato modificare il file se non si ha il Lock in scrittura!");
         }
-
     }
 
     /**
@@ -181,7 +177,7 @@ public class FileHandler {
         return this.isUserWriting;
     }
 
-    public File getFile(){
+    public File getFile() {
         return this.file;
     }
 

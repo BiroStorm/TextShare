@@ -82,16 +82,15 @@ public class ClientHandlerTS implements Runnable {
 
                 } else if (commandType.equalsIgnoreCase("read")) {
 
-                    this.gestioneLettura(fileName, fromClient, toClient);
+                    this.readSession(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("edit")) {
 
                     this.editSession(fileName, fromClient, toClient);
 
                 } else if (commandType.equalsIgnoreCase("rename")) {
-
-                    boolean renamed = dirManager.rename(fileName, splittedCom);
-                    if (renamed == true) {
+                    
+                    if (dirManager.rename(fileName, splittedCom)) {
                         toClient.println("Il file è stato rinominato correttamente");
                     } else {
                         toClient.println("Non è stato possibile rinominare il file");
@@ -169,7 +168,7 @@ public class ClientHandlerTS implements Runnable {
 
     }
 
-    private void gestioneLettura(String filename, Scanner input, PrintWriter output) {
+    private void readSession(String filename, Scanner input, PrintWriter output) {
         try {
             FileHandler fh = dirManager.getFileHandler(filename);
             output.println("Attesa inizio Sessione di Scrittura...");

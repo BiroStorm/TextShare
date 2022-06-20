@@ -46,7 +46,7 @@ public class DirectoryManager {
             throw new FileNotFoundException("Il File " + filename + " non esiste!");
         FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
         if (fh == null) {
-            // si può cancellare in sicurezza:
+            // si può cancellare in sicurezza perchè nessuno sta scrivendo o leggendo
             if (f.delete())
                 return true;
             return false;
@@ -60,12 +60,16 @@ public class DirectoryManager {
     }
 
     public boolean rename(String filename, String[] splittedCom) throws FileNotFoundException {
-
+        /*
+         * Nota: Cosa succede se 2 thread tentano di rinominare 2 file diversi
+         * con uno stesso nome, nessuno stesso istante?
+         * Esempio: FileA --> testo.txt, al contempo FileB --> testo.txt...
+         * Oppure: Utente A crea file testo.txt, nel mentre un utente B rinomina il file
+         * in testo.txt
+         */
         File oldName = new File(directory.getPath(), filename);
         File newName = new File(directory.getPath(), splittedCom[2]);
-
-        boolean renamed = oldName.renameTo(newName);
-        if (renamed == true) {
+        if (oldName.renameTo(newName)) {
             concurrentHM.remove(oldName.getPath());
             this.InsertIntoCHM(newName.getPath());
             return true;
@@ -85,7 +89,11 @@ public class DirectoryManager {
 
     private FileHandler InsertIntoCHM(String filePath) throws FileNotFoundException {
         FileHandler fh = new FileHandler(filePath);
-        concurrentHM.put(filePath, fh);
+        if (concurrentHM.put(filePath, fh) != null) {
+            // Nota: Se arriva qua --> C'è stato qualche errore, perchè è stata fatta una
+            // sostituzione invece che un inserimento, ovvero, ci stava già un FileHandler
+            // con quel valore.
+        }
         return fh;
     }
 }
