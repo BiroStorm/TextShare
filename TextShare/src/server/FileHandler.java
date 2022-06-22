@@ -9,7 +9,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.io.PrintWriter;
 
 /**
  * Gestisce il singolo file dato il path in input (senza ".txt")
@@ -119,7 +118,7 @@ public class FileHandler {
             if (line.isEmpty()) {
                 this.bw.newLine();
             } else {
-                bw.write(line + "\n");
+                this.bw.write(line + "\n");
             }
             this.bw.flush();
         } else {

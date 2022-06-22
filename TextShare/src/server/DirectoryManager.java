@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /*
- * Contenitore dei metodi per gestire le operazioni sui file
+ * Contenitore dei metodi per gestire le operazioni sulla Directory.
  */
 public class DirectoryManager {
 
@@ -31,16 +31,15 @@ public class DirectoryManager {
 
         File f = new File(directory.getPath(), Filename);
         // il metodo createNewFile controlla già di per se se il file esiste o meno.
+
         if (f.createNewFile()) {
-            this.InsertIntoCHM(f.getPath());
             return true;
         } else {
             return false;
         }
-
     }
 
-    public boolean delete(String filename) throws FileNotFoundException {
+    synchronized public boolean delete(String filename) throws FileNotFoundException, FileOccupiedException {
         File f = new File(directory.getPath(), filename);
         if (!f.exists())
             throw new FileNotFoundException("Il File " + filename + " non esiste!");
@@ -53,46 +52,43 @@ public class DirectoryManager {
         }
         // Esisteva il FileHandler nel CHM, bisogna controllare i lettori e scrittori:
         if (fh.getisUserWriting() || fh.getReadingUsers() > 0)
-            return false;
+            throw new FileOccupiedException(filename);
         concurrentHM.remove(f.getPath());
-        return true;
-
+        if (f.delete())
+            return true;
+        return false;
     }
 
-    public boolean rename(String filename, String[] splittedCom) throws FileNotFoundException {
-        /*
-         * Nota: Cosa succede se 2 thread tentano di rinominare 2 file diversi
-         * con uno stesso nome, nessuno stesso istante?
-         * Esempio: FileA --> testo.txt, al contempo FileB --> testo.txt...
-         * Oppure: Utente A crea file testo.txt, nel mentre un utente B rinomina il file
-         * in testo.txt
-         */
-        File oldName = new File(directory.getPath(), filename);
-        File newName = new File(directory.getPath(), splittedCom[2]);
-        if (oldName.renameTo(newName)) {
-            concurrentHM.remove(oldName.getPath());
-            this.InsertIntoCHM(newName.getPath());
+    synchronized public boolean rename(String fileName, String newFileName)
+            throws FileNotFoundException, FileOccupiedException {
+
+        File oldFile = new File(directory.getPath(), fileName);
+        File newFile = new File(directory.getPath(), newFileName);
+
+        if (!oldFile.exists())
+            throw new FileNotFoundException("Il File " + fileName + " non esiste!");
+        if (newFile.exists()) return false;
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + fileName);
+        if (fh != null) {
+            if (fh.getisUserWriting() || fh.getReadingUsers() > 0)
+                throw new FileOccupiedException(fileName);
+        }
+
+        if (oldFile.renameTo(newFile)) {
+            concurrentHM.remove(oldFile.getPath());
             return true;
         } else {
             return false;
         }
     }
 
-    public FileHandler getFileHandler(String filename) throws FileNotFoundException {
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
-        if (fh == null) {
-            // non è stato caricato ancora sul CHM, quindi lo carichiamo
-            fh = this.InsertIntoCHM(directory.getPath() + "\\" + filename);
-        }
-        return fh;
-    }
+    synchronized public FileHandler getFileHandler(String filename) throws FileNotFoundException {
 
-    private FileHandler InsertIntoCHM(String filePath) throws FileNotFoundException {
-        FileHandler fh = new FileHandler(filePath);
-        if (concurrentHM.put(filePath, fh) != null) {
-            // Nota: Se arriva qua --> C'è stato qualche errore, perchè è stata fatta una
-            // sostituzione invece che un inserimento, ovvero, ci stava già un FileHandler
-            // con quel valore.
+        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
+
+        if (fh == null) {
+            fh = new FileHandler(directory.getPath() + "\\" + filename);
+            concurrentHM.put(directory.getPath() + "\\" + filename, fh);
         }
         return fh;
     }

@@ -60,62 +60,67 @@ public class ClientHandlerTS implements Runnable {
                 String commandType = splittedCom[0];
                 String fileName = splittedCom.length > 1 ? splittedCom[1] : "";
 
-                if (commandType.equalsIgnoreCase("list")) {
-                    commandList(toClient);
-                } else if (commandType.equalsIgnoreCase("create")) {
-                    // Nota: Bisogna gestire la concorrenza sull'inserimento e creazione del file.
-                    // dati 2 thread, se entrambi procedono con la creazione di un file con lo
-                    // stesso nome
-                    // anche se, il problema prodotto non è affatto un problema...
-
-                    try {
+                try {
+                    if (commandType.equalsIgnoreCase("list")) {
+                        commandList(toClient);
+                    } else if (commandType.equalsIgnoreCase("create")) {
                         boolean created = dirManager.createNewFile(fileName);
                         if (created == true) {
                             toClient.println("File creato correttamente");
                         } else {
                             toClient.println("File già esistente: il file non è stato creato");
                         }
-                    } catch (IOException e) {
-                        System.out.println("Errore nella Creazione del file: " + e.getMessage());
-                        e.printStackTrace();
-                    }
+                    } else if (commandType.equalsIgnoreCase("read")) {
 
-                } else if (commandType.equalsIgnoreCase("read")) {
+                        this.readSession(fileName, fromClient, toClient);
 
-                    this.readSession(fileName, fromClient, toClient);
+                    } else if (commandType.equalsIgnoreCase("edit")) {
 
-                } else if (commandType.equalsIgnoreCase("edit")) {
+                        this.editSession(fileName, fromClient, toClient);
 
-                    this.editSession(fileName, fromClient, toClient);
+                    } else if (commandType.equalsIgnoreCase("rename")) {
+                        if(splittedCom.length != 3){
+                            toClient.println("Comando incompleto!\nIl comando è: rename  file1  file2");
+                            continue;
+                        }
+                        if (dirManager.rename(fileName, splittedCom[2])) {
+                            toClient.println("Il file è stato rinominato correttamente");
+                        } else {
+                            toClient.println("Il file " + splittedCom[2] + " esiste già!");
+                        }
 
-                } else if (commandType.equalsIgnoreCase("rename")) {
-                    
-                    if (dirManager.rename(fileName, splittedCom)) {
-                        toClient.println("Il file è stato rinominato correttamente");
-                    } else {
-                        toClient.println("Non è stato possibile rinominare il file");
-                    }
-
-                } else if (commandType.equalsIgnoreCase("delete")) {
-                    try {
+                    } else if (commandType.equalsIgnoreCase("delete")) {
+                        if(splittedCom.length != 2){
+                            toClient.println("Comando incompleto!\nIl comando è: delete nomefile");
+                            continue;
+                        }
                         if (dirManager.delete(fileName)) {
                             toClient.println("Il file è stato eliminato correttamente.");
                         } else {
-                            toClient.println("Non è stato possibile eliminare il file.\nQualcuno potrebbe star leggendo o scrivendo il file!");
+                            toClient.println(
+                                    "Non è stato possibile eliminare il file.\nQualcuno potrebbe star leggendo o scrivendo il file!");
                         }
-                    } catch (FileNotFoundException fe) {
-                        toClient.println(fe.getMessage());
-                    }
 
-                } else if (commandType.equalsIgnoreCase("quit")) {
-                    // Se il client chiude la connessione, fai lo stesso lato server
-                    toClient.println(this.IDENTIFIER + "503");
-                    System.out.println("Client " + this.IDENTIFIER + " quitting...");
-                    break;
-                } else {
-                    // In caso di comando sconosciuto, notifica il client
-                    toClient.println("Comando sconosciuto");
+                    } else if (commandType.equalsIgnoreCase("quit")) {
+                        // Se il client chiude la connessione, fai lo stesso lato server
+                        toClient.println(this.IDENTIFIER + "503");
+                        System.out.println("Client " + this.IDENTIFIER + " quitting...");
+                        break;
+                    } else {
+                        // In caso di comando sconosciuto, notifica il client
+                        toClient.println("Comando sconosciuto");
+                    }
+                } catch (FileNotFoundException fe) {
+                    toClient.println(fe.getMessage());
+                } catch (FileOccupiedException e) {
+                    toClient.println(e.getMessage());
+                } catch (IOException e) {
+                    System.out.println("Errore IOException" + e.getMessage());
+                    e.printStackTrace();
+                    toClient.println(e.getMessage());
+                    ;
                 }
+
             }
 
             // rimuove il socket dalla lista dei socket.
@@ -147,7 +152,7 @@ public class ClientHandlerTS implements Runnable {
         } else {
             DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
             toClient.println("Lista dei file presenti sul server:");
-            toClient.println("Nome File \t Ultima Modifica \t Scrittura \t Lettura");
+            toClient.println("Nome File \t Ultima Modifica \t Lettura \t Scrittura");
             ConcurrentHashMap<String, FileHandler> CHM = dirManager.getCHM();
             for (File f : filesList) {
                 if (f.isDirectory())
@@ -183,6 +188,9 @@ public class ClientHandlerTS implements Runnable {
                     // do nothing...
                     output.println("\033[3mPer uscire dalla modalità lettura inviare :close\033[0m");
                 }
+            } catch (FileNotFoundException e) {
+                output.println("Errore: " + e.getMessage());
+                output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
             } finally {
                 // Qualsiasi cosa accada dopo l'incremento (un crash del client)
                 // comunque decrementa il counter del numero di client in lettura su questo file
@@ -227,20 +235,26 @@ public class ClientHandlerTS implements Runnable {
                         fh.deleteLastRow();
                     } else if (linea.equalsIgnoreCase(":close")) {
                         break;
-                    }else{
+                    } else {
                         // Nuova riga su File
                         fh.Write(linea);
                     }
-                    
                 }
+            } catch (FileNotFoundException e) {
+                // System.out.println("Errore nella Lettura di un file: " + e.getMessage());
+                output.println("Errore: " + e.getMessage());
+                output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
+            } catch (IOException e) {
+                output.println(e.getMessage());
             } finally {
                 fh.CloseWriteSession();
                 output.println("Sessione di scrittura Terminata.");
             }
 
-        } catch (Exception e) {
-            output.println("Il file " + filename + " non esiste!");
-            output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
+        } catch (FileNotFoundException e) {
+            output.println(e.getMessage());
+        } catch (IOException e) {
+            output.println(e.getMessage());
         }
     }
     // metodo di gestione edit provvisorio
