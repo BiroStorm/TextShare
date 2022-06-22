@@ -133,7 +133,7 @@ public class FileHandler {
      * 
      * @throws IOException
      */
-    public void deleteLastRow() throws IOException {
+    public boolean deleteLastRow() throws IOException {
         if (this.lock.writeLock().isHeldByCurrentThread()) {
             this.bw.close();
             // leggo il file
@@ -148,6 +148,7 @@ public class FileHandler {
             this.bw = new BufferedWriter(new FileWriter(file));
             this.bw.write(testo);
             this.bw.flush();
+            return true;
         } else {
             throw new IOException("Vietato modificare il file se non si ha il Lock in scrittura!");
         }

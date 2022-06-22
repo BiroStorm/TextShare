@@ -183,10 +183,10 @@ public class ClientHandlerTS implements Runnable {
                 output.println(testo);
                 output.flush();
                 output.println(this.IDENTIFIER + "101");
-                output.println("\033[3mPer uscire dalla modalità lettura inviare :close\033[0m");
+                output.println("[Per uscire dalla modalità lettura inviare :close]");
                 while (!input.nextLine().equalsIgnoreCase(":close")) {
                     // do nothing...
-                    output.println("\033[3mPer uscire dalla modalità lettura inviare :close\033[0m");
+                    output.println("[Per uscire dalla modalità lettura inviare :close]");
                 }
             } catch (FileNotFoundException e) {
                 output.println("Errore: " + e.getMessage());
@@ -216,7 +216,6 @@ public class ClientHandlerTS implements Runnable {
         }
     }
 
-    // metodo di gestione edit provvisorio
     private void editSession(String filename, Scanner input, PrintWriter output) {
         try {
             FileHandler fh = dirManager.getFileHandler(filename);
@@ -224,15 +223,17 @@ public class ClientHandlerTS implements Runnable {
             try {
                 fh.OpenWriteSession();
                 output.println("Avviata Sessione di Scrittura per il file " + filename);
-                output.println("\033[3mPer uscire dalla modalità scrittura inviare :close\033[0m");
-                output.println("\033[3mPer eliminare l'ultima riga del file inviare :backspace\033[0m");
+                output.println("[Per uscire dalla modalità scrittura inviare :close]");
+                output.println("[Per eliminare l'ultima riga del file inviare :backspace]");
 
                 while (true) {
                     String linea = input.nextLine();
                     // non si usa switch perchè è necessario fare Break;
                     if (linea.equalsIgnoreCase(":backspace")) {
                         // Rimuove l'ultima riga del file:
-                        fh.deleteLastRow();
+                        if(fh.deleteLastRow()){
+                            output.println("Ultima riga eliminata correttamente.");
+                        }
                     } else if (linea.equalsIgnoreCase(":close")) {
                         break;
                     } else {
@@ -257,6 +258,5 @@ public class ClientHandlerTS implements Runnable {
             output.println(e.getMessage());
         }
     }
-    // metodo di gestione edit provvisorio
 
 }
