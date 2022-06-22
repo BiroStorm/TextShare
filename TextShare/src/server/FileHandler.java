@@ -32,7 +32,6 @@ public class FileHandler {
 
     // contatori degli utenti in lettura o scrittura
     // (utili per il comando info del server e list del client)
-    private AtomicInteger readingUsers;
     private boolean isUserWriting;
 
     public FileHandler(String filePath) throws FileNotFoundException {
@@ -44,7 +43,6 @@ public class FileHandler {
         }
         this.file = f;
         this.lock = new ReentrantReadWriteLock();
-        this.readingUsers = new AtomicInteger(0);
         this.isUserWriting = false;
     }
 
@@ -59,7 +57,6 @@ public class FileHandler {
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
         // Inizio Sessione di Lettura
-        this.readingUsers.incrementAndGet();
         BufferedReader br = new BufferedReader(new FileReader(file));
 
         String testo = "";
@@ -87,7 +84,6 @@ public class FileHandler {
      */
     public void CloseReadSession() {
         this.lock.readLock().unlock();
-        this.readingUsers.decrementAndGet();
     }
 
     /**
@@ -170,7 +166,7 @@ public class FileHandler {
     }
 
     public int getReadingUsers() {
-        return this.readingUsers.get();
+        return this.lock.getReadLockCount();
     }
 
     public boolean getisUserWriting() {

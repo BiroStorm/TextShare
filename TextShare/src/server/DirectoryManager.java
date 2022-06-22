@@ -56,6 +56,7 @@ public class DirectoryManager {
         concurrentHM.remove(f.getPath());
         if (f.delete())
             return true;
+        // ritorna falso quando se il file è aperto (in scrittura o lettura!)
         return false;
     }
 
