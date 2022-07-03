@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * ClientHandler implementa la gestione della connessione con il suo client, '
  * il "server vero e proprio".
  * Prende il clientSocket per gestire la connessione con il client,
- * prende il TextManager che contiene i metodi per soddisfare le richieste del
+ * prende il DirectoryManager che contiene i metodi per soddisfare le richieste del
  * client,
  * prende la lista di Socket cosi' da rimuovere il socket che gestisce dalla
  * socketList nel caso in cui il client richieda la disconnessione.
@@ -86,7 +86,7 @@ public class ClientHandlerTS implements Runnable {
                         if (dirManager.rename(fileName, splittedCom[2])) {
                             toClient.println("Il file è stato rinominato correttamente");
                         } else {
-                            toClient.println("Il file " + splittedCom[2] + " esiste già!");
+                            toClient.println("Non è stato possibile rinominare il file " + splittedCom[2]);
                         }
 
                     } else if (commandType.equalsIgnoreCase("delete")) {
@@ -139,6 +139,7 @@ public class ClientHandlerTS implements Runnable {
              * perche' fromClient.nextLine(), riga 28, non puo' piu' leggere
              * Visto che il socket e' chiuso, il ClientHandler puo' terminare
              */
+            System.out.println("Client " + this.IDENTIFIER + " disconnesso.");
             return;
         }
 
@@ -153,7 +154,7 @@ public class ClientHandlerTS implements Runnable {
             DateFormat sdf = new SimpleDateFormat("dd MMMM yyyy, hh:mm");
             toClient.println("Lista dei file presenti sul server:");
             toClient.println("Nome File \t Ultima Modifica \t Lettura \t Scrittura");
-            ConcurrentHashMap<String, FileHandler> CHM = dirManager.getCHM();
+            ConcurrentHashMap<String, FileManager> CHM = dirManager.getCHM();
             for (File f : filesList) {
                 if (f.isDirectory())
                     continue;
@@ -161,9 +162,15 @@ public class ClientHandlerTS implements Runnable {
                 // se se il file è in HashMap conto il numero di utenti in lettura/scrittura
                 // altrimenti non esistono utenti in lettura/scrittura per quel file.
                 if (CHM.containsKey(f.getPath())) {
-                    FileHandler fh = CHM.get(f.getPath());
+                    FileManager fm = CHM.get(f.getPath());
 
-                    toClient.printf("\t%d \t %d\n", fh.getReadingUsers(), fh.getisUserWriting() ? 1 : 0);
+                    if(fm.isSomeoneWriting()){
+                        // ci può essere al massimo 1 utente in scrittura ==> 0 in lettura
+                        toClient.printf("\t%d \t %d\n", 0, 1);
+                        continue;
+                    }
+                    // se non ci sono utenti in scrittura, controlliamo utenti in lettura.
+                    toClient.printf("\t%d \t %d\n", fm.getReadingUsers(), 0);
                 } else {
                     toClient.println("\t0 \t 0");
                 }
@@ -175,10 +182,10 @@ public class ClientHandlerTS implements Runnable {
 
     private void readSession(String filename, Scanner input, PrintWriter output) {
         try {
-            FileHandler fh = dirManager.getFileHandler(filename);
-            output.println("Attesa inizio Sessione di Scrittura...");
+            FileManager fm = dirManager.getFileManager(filename);
+            output.println("Attesa inizio Sessione di Lettura...");
             try {
-                String testo = fh.OpenReadSession();
+                String testo = fm.OpenReadSession();
                 output.println("Avviata Sessione di Lettura per il file " + filename);
                 output.println(testo);
                 output.flush();
@@ -189,12 +196,12 @@ public class ClientHandlerTS implements Runnable {
                     output.println("[Per uscire dalla modalità lettura inviare :close]");
                 }
             } catch (FileNotFoundException e) {
-                output.println("Errore: " + e.getMessage());
+                output.println("File " + filename + " non più disponbile!");
                 output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
             } finally {
                 // Qualsiasi cosa accada dopo l'incremento (un crash del client)
                 // comunque decrementa il counter del numero di client in lettura su questo file
-                fh.CloseReadSession();
+                fm.CloseReadSession();
                 output.println("Sessione di scrittura Terminata.");
             }
 
@@ -203,7 +210,7 @@ public class ClientHandlerTS implements Runnable {
              * Il caso migliore sarebbe quello di stampare riga per riga, o anche
              * tramite un input dell'utente (es. Invio).
              * In tale caso bisognerebbe modificare il OpenReadSession e creare un
-             * nuovo metodo in FileHandler, come ad esempio Read() e farlo simile
+             * nuovo metodo in FileManager, come ad esempio Read() e farlo simile
              * alla procedura di Write.
              */
         } catch (FileNotFoundException e) {
@@ -218,11 +225,12 @@ public class ClientHandlerTS implements Runnable {
 
     private void editSession(String filename, Scanner input, PrintWriter output) {
         try {
-            FileHandler fh = dirManager.getFileHandler(filename);
+            FileManager fm = dirManager.getFileManager(filename);
             output.println("Attesa inizio Sessione di Scrittura...");
             try {
-                fh.OpenWriteSession();
+                fm.OpenWriteSession();
                 output.println("Avviata Sessione di Scrittura per il file " + filename);
+                output.println(this.IDENTIFIER + "101");
                 output.println("[Per uscire dalla modalità scrittura inviare :close]");
                 output.println("[Per eliminare l'ultima riga del file inviare :backspace]");
 
@@ -231,24 +239,24 @@ public class ClientHandlerTS implements Runnable {
                     // non si usa switch perchè è necessario fare Break;
                     if (linea.equalsIgnoreCase(":backspace")) {
                         // Rimuove l'ultima riga del file:
-                        if(fh.deleteLastRow()){
+                        if(fm.deleteLastRow()){
                             output.println("Ultima riga eliminata correttamente.");
                         }
                     } else if (linea.equalsIgnoreCase(":close")) {
                         break;
                     } else {
                         // Nuova riga su File
-                        fh.Write(linea);
+                        fm.Write(linea);
                     }
                 }
             } catch (FileNotFoundException e) {
                 // System.out.println("Errore nella Lettura di un file: " + e.getMessage());
                 output.println("Errore: " + e.getMessage());
-                output.println(this.IDENTIFIER + "101"); // unlock del terminale in scrittura.
             } catch (IOException e) {
                 output.println(e.getMessage());
             } finally {
-                fh.CloseWriteSession();
+                output.println(this.IDENTIFIER + "101");
+                fm.CloseWriteSession();
                 output.println("Sessione di scrittura Terminata.");
             }
 

@@ -4,10 +4,12 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
@@ -17,24 +19,21 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * Ogni operazione (lettura, scrittura) comporta la riapertura del
  * file, così da chiudere il canale (BufferedWriter/Reader) sempre.
  */
-public class FileHandler {
+public class FileManager {
 
-    /**
-     * In caso il file non esista o il path porta ad una directory
-     * ritorna un IncorrectFileException.
-     * 
-     * @param filePath
-     * @throws IncorrectFileException
-     */
     private File file;
     private ReentrantReadWriteLock lock;
     private BufferedWriter bw;
+    private Lock blockingLock;
 
-    // contatori degli utenti in lettura o scrittura
-    // (utili per il comando info del server e list del client)
-    private boolean isUserWriting;
-
-    public FileHandler(String filePath) throws FileNotFoundException {
+    /**
+     * In caso il file non esista o il path porta ad una directory
+     * ritorna un FileNotFoundException.
+     * 
+     * @param filePath
+     * @throws FileNotFoundException
+     */
+    public FileManager(String filePath) throws FileNotFoundException {
         File f = new File(filePath);
 
         if (!f.exists() || f.isDirectory()) {
@@ -43,7 +42,7 @@ public class FileHandler {
         }
         this.file = f;
         this.lock = new ReentrantReadWriteLock();
-        this.isUserWriting = false;
+        this.blockingLock = new ReentrantLock();
     }
 
     /**
@@ -54,11 +53,11 @@ public class FileHandler {
      * @see {@link #CloseReadSession()}
      */
     public String OpenReadSession() throws IOException, FileNotFoundException {
+
         // Continua se il Lock in lettura è disponibile:
         this.lock.readLock().lock();
         // Inizio Sessione di Lettura
         BufferedReader br = new BufferedReader(new FileReader(file));
-
         String testo = "";
         while (br.ready()) {
             testo += br.readLine() + "\n";
@@ -94,10 +93,19 @@ public class FileHandler {
      * @see {@link #CloseWriteSession()}
      */
     public void OpenWriteSession() throws IOException, FileNotFoundException {
+
+        this.blockingLock.lock();
+        // START CRITICAL SECTION
+
         // Prendiamo il Lock in scrittura.
         this.lock.writeLock().lock();
-        // le operazioni di assegnazioni sono atomiche (see Javadocs)
-        this.isUserWriting = true;
+
+        if (!this.file.exists())
+            throw new FileNotFoundException(
+                    "Il File non risulta più accessibile. Controllare che non sia stato cancellato o spostato!");
+
+        // END CRITICAL SECTION
+        this.blockingLock.unlock();
         this.bw = new BufferedWriter(new FileWriter(file, true));
     }
 
@@ -157,24 +165,45 @@ public class FileHandler {
      * @throws IOException
      */
     public void CloseWriteSession() throws IOException {
-
-        // le operazioni di assegnazioni sono atomiche (see Javadocs)
-        this.isUserWriting = false;
         this.lock.writeLock().unlock();
         // è sempre buona norma chiudere il buffered quando si finisce.
         bw.close();
     }
 
+    /**
+     * Ritorna il numero di Thread che hanno il Lock in lettura.
+     * 
+     * @return
+     */
     public int getReadingUsers() {
         return this.lock.getReadLockCount();
     }
 
-    public boolean getisUserWriting() {
-        return this.isUserWriting;
+    /**
+     * Ritorna true se un Thread ha in possesso il Lock in scrittura
+     * 
+     * @return
+     */
+    public boolean isSomeoneWriting() {
+        return this.lock.isWriteLocked();
     }
 
+    /**
+     * Ritorna un instanza del File associato a questo FileManager
+     * 
+     * @return File
+     */
     public File getFile() {
+
         return this.file;
+    }
+
+    public boolean isSafeHandling() {
+        return this.blockingLock.tryLock();
+    }
+
+    public void unLockBlockingLock() {
+        this.blockingLock.unlock();
     }
 
 }

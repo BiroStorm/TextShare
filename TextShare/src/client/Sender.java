@@ -28,7 +28,7 @@ public class Sender implements Runnable {
                 // che usiamo il Thread come Monitor Object.
                 synchronized (Thread.currentThread()) {
                     toOther.println(message);
-                    if (message.startsWith("read ")) {
+                    if (message.startsWith("read ") || message.startsWith("edit ")) {
                         Thread.currentThread().wait();
                     }
                 }

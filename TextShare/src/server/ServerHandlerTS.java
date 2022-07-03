@@ -48,11 +48,11 @@ public class ServerHandlerTS implements Runnable {
 					}
 					// se il file e' in HashMap conto il numero di client connessi in lettura e in
 					// scrittura, se il file non e' in HM allora significa 0 lettori e 0 scrittori.
-					ConcurrentHashMap<String, FileHandler> CHM = dirManager.getCHM();
+					ConcurrentHashMap<String, FileManager> CHM = dirManager.getCHM();
 					if (CHM.containsKey(f.getPath())) {
-						FileHandler fh = CHM.get(f.getPath());
-						totalReadingUsers += fh.getReadingUsers();
-						totalWritingUsers += fh.getisUserWriting() ? 1 : 0;
+						FileManager fm = CHM.get(f.getPath());
+						totalReadingUsers += fm.getReadingUsers();
+						totalWritingUsers += fm.isSomeoneWriting() ? 1 : 0;
 					}
 				}
 				// stampo le informazioni

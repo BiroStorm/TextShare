@@ -12,18 +12,18 @@ public class DirectoryManager {
 
     private File directory;
     // ConcurrentHashMap è un HashMap Thread-Safe, ha un Lock interno.
-    private ConcurrentHashMap<String, FileHandler> concurrentHM;
+    private ConcurrentHashMap<String, FileManager> concurrentHM;
 
     public DirectoryManager(File directory) {
         this.directory = directory;
-        this.concurrentHM = new ConcurrentHashMap<String, FileHandler>();
+        this.concurrentHM = new ConcurrentHashMap<String, FileManager>();
     }
 
     public File getDirectory() {
         return this.directory;
     }
 
-    public ConcurrentHashMap<String, FileHandler> getCHM() {
+    public ConcurrentHashMap<String, FileManager> getCHM() {
         return this.concurrentHM;
     }
 
@@ -43,20 +43,27 @@ public class DirectoryManager {
         File f = new File(directory.getPath(), filename);
         if (!f.exists())
             throw new FileNotFoundException("Il File " + filename + " non esiste!");
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
-        if (fh == null) {
+        FileManager fm = concurrentHM.get(directory.getPath() + "\\" + filename);
+        if (fm == null) {
             // si può cancellare in sicurezza perchè nessuno sta scrivendo o leggendo
-            if (f.delete())
-                return true;
-            return false;
+            return f.delete();
         }
-        // Esisteva il FileHandler nel CHM, bisogna controllare i lettori e scrittori:
-        if (fh.getisUserWriting() || fh.getReadingUsers() > 0)
-            throw new FileOccupiedException(filename);
-        concurrentHM.remove(f.getPath());
-        if (f.delete())
-            return true;
-        // ritorna falso quando se il file è aperto (in scrittura o lettura!)
+
+        if (fm.isSafeHandling()) {
+            // se riesce ad acquisire il lock per il critical section
+            try {
+                if (fm.isSomeoneWriting() || fm.getReadingUsers() > 0)
+                    throw new FileOccupiedException(filename);
+                concurrentHM.remove(f.getPath());
+                // ritorna falso quando se il file è aperto (in scrittura o lettura!)
+                return f.delete();
+            } finally {
+                // in ogni caso unlocka il lock della critical section
+                fm.unLockBlockingLock();
+            }
+        }
+        // se arriva qua, significa che durante la Race Condition, un Thread è entrato
+        // in scrittura
         return false;
     }
 
@@ -68,29 +75,40 @@ public class DirectoryManager {
 
         if (!oldFile.exists())
             throw new FileNotFoundException("Il File " + fileName + " non esiste!");
-        if (newFile.exists()) return false;
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + fileName);
-        if (fh != null) {
-            if (fh.getisUserWriting() || fh.getReadingUsers() > 0)
-                throw new FileOccupiedException(fileName);
+        if (newFile.exists())
+            throw new FileOccupiedException("Esiste già un file di nome " + newFileName);
+        FileManager fm = concurrentHM.get(directory.getPath() + "\\" + fileName);
+        if (fm == null) {
+            return oldFile.renameTo(newFile);
         }
+        // start critical section 
+        if (fm.isSafeHandling()) {
+            try {
+                if (fm.isSomeoneWriting() || fm.getReadingUsers() > 0)
+                    throw new FileOccupiedException(
+                            "Sembra che un Client sia connesso in Scrittura o Lettura sul file " + fileName);
+                if (oldFile.renameTo(newFile)) {
+                    concurrentHM.remove(oldFile.getPath());
+                    return true;
+                }
+                return false;
+            } finally {
+                fm.unLockBlockingLock();
+            }
+        }
+        // END CRITICAL SECTION
+        throw new FileOccupiedException("Sembra che un Client sia connesso in Scrittura!");
 
-        if (oldFile.renameTo(newFile)) {
-            concurrentHM.remove(oldFile.getPath());
-            return true;
-        } else {
-            return false;
-        }
     }
 
-    synchronized public FileHandler getFileHandler(String filename) throws FileNotFoundException {
+    synchronized public FileManager getFileManager(String filename) throws FileNotFoundException {
 
-        FileHandler fh = concurrentHM.get(directory.getPath() + "\\" + filename);
+        FileManager fm = concurrentHM.get(directory.getPath() + "\\" + filename);
 
-        if (fh == null) {
-            fh = new FileHandler(directory.getPath() + "\\" + filename);
-            concurrentHM.put(directory.getPath() + "\\" + filename, fh);
+        if (fm == null) {
+            fm = new FileManager(directory.getPath() + "\\" + filename);
+            concurrentHM.put(directory.getPath() + "\\" + filename, fm);
         }
-        return fh;
+        return fm;
     }
 }
