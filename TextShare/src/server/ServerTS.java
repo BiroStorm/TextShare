@@ -17,7 +17,7 @@ public class ServerTS {
     public static void main(String args[]) {
 
         if (args.length < 2) {
-            System.err.println("Errore, avviare nel seguente modo: java TSServer <path> <port>");
+            System.err.println("Errore, avviare nel seguente modo: java server.ServerTS <path> <port>");
             return;
         }
         String dirPath = args[0];
