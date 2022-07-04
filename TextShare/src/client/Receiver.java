@@ -68,7 +68,7 @@ public class Receiver implements Runnable {
         }finally{
             // Qualunque cosa succeda, interrompere il senderThread.
             senderThread.interrupt();
-            System.out.println("Connessione col Server è stato chiuso!");
+            System.out.println("La connessione col Server è � stata chiusa!");
             System.out.println("Chiusura del Receiver.");
             System.out.println("Invia qualcosa per chiudere il Sender:");
         }

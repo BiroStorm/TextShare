@@ -19,7 +19,7 @@ public class ClientTS {
         // All'avvio del client passare indirizzo e porta del server a cui
         // connettersi
         if (args.length < 2) {
-            System.err.println("Errore, avviare nel seguente modo: java client.ClientTS <host> <port>");
+            System.err.println("Errore, avviare nel seguente modo: java client.ClientTS [host] [port]");
             return;
         }
 
