@@ -16,26 +16,17 @@ import java.util.NoSuchElementException;
 public class ClientTS {
     public static void main(String args[]) {
 
-        /*
-         * For debug reason:
-         */
+        // All'avvio del client passare indirizzo e porta del server a cui
+        // connettersi
+        if (args.length < 2) {
+            System.err.println("Errore, avviare nel seguente modo: java TSClient <host> <port>");
+            return;
+        }
 
-        String host = "localhost";
-        int port = 3500;
+        // estraiamo i due argomenti da linea di comando
+        String host = args[0];
+        int port = Integer.parseInt(args[1]);
 
-        /*
-         * // All'avvio del client passare indirizzo e porta del server a cui
-         * connettersi
-         * if (args.length < 2) {
-         * System.err.
-         * println("Errore, avviare nel seguente modo: java TSClient <host> <port>");
-         * return;
-         * }
-         * 
-         * // estraiamo i due argomenti da linea di comando
-         * String host = args[0];
-         * int port = Integer.parseInt(args[1]);
-         */
         try {
             // Ci connettiamo all'indirizzo e alla porta forniti
             Socket s = new Socket(host, port);

@@ -15,22 +15,13 @@ import java.util.ArrayList;
 public class ServerTS {
 
     public static void main(String args[]) {
-        /*
-         * For debug reason:
-         */
 
-        String dirPath = ".";
-        int port = 3500;
-
-        /*
-         * if (args.length < 2) {
-         * System.err.
-         * println("Errore, avviare nel seguente modo: java TSServer <path> <port>");
-         * return;
-         * }
-         * String dirPath = args[0];
-         * int port = Integer.parseInt(args[1]);//tra 1024 e 65535
-         */
+        if (args.length < 2) {
+            System.err.println("Errore, avviare nel seguente modo: java TSServer <path> <port>");
+            return;
+        }
+        String dirPath = args[0];
+        int port = Integer.parseInt(args[1]);// tra 1024 e 65535
 
         // check del path
         File directory = new File(dirPath);
@@ -75,7 +66,7 @@ public class ServerTS {
              * listener.accept() e' ancora in esecuzione ma,
              * dato che viene chiuso inaspettatamente, solleva l'eccezione. La gestiamo
              * semplicemente chiudendo l'app.
-             * NB: anche la creazione di listener (riga 22) può sollevare la stessa
+             * NB: anche la creazione di listener può sollevare la stessa
              * eccezione, anche in questo caso chiudiamo l'app
              * perchè senza ServerSocket non possiamo fare nulla.
              */

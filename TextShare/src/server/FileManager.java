@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -24,6 +23,11 @@ public class FileManager {
     private File file;
     private ReentrantReadWriteLock lock;
     private BufferedWriter bw;
+
+    // Questo Lock serve per la gestione della mutua esclusione tra il FileManagere
+    // e il DirectoryManager, in particolare la mutua esclusione tra il metodo
+    // openReadSessione() di questa classe e i metodi rename e delete di
+    // DirectoryManager.
     private Lock blockingLock;
 
     /**

@@ -31,12 +31,7 @@ public class DirectoryManager {
 
         File f = new File(directory.getPath(), Filename);
         // il metodo createNewFile controlla già di per se se il file esiste o meno.
-
-        if (f.createNewFile()) {
-            return true;
-        } else {
-            return false;
-        }
+        return f.createNewFile();
     }
 
     synchronized public boolean delete(String filename) throws FileNotFoundException, FileOccupiedException {
